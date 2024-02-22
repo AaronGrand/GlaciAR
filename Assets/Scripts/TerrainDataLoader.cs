@@ -5,6 +5,9 @@ using System.Net;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
+using Unity.Jobs;
+using Unity.Collections;
+using System.Threading;
 
 /// <summary>
 /// Loads Terrain Data from OpenTopography.org.
@@ -115,7 +118,10 @@ public class TerrainDataLoader
     /// </summary>
     public static TerrainData CreateTerrainDataFromAsciiGrid(AsciiHeightData data)
     {
+        UnityMainThreadDispatcher.Instance().Enqueue(() =>
+        {
 
+        }
         TerrainData terrainData = new TerrainData();
         // max Heightmap Resolution
         terrainData.heightmapResolution = 4097;

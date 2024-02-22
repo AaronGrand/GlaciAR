@@ -1,8 +1,12 @@
 using System;
 using System.Collections;
-using TMPro;
 using Unity.XR.CoreUtils;
 using UnityEngine;
+using Unity.Jobs;
+using Unity.Burst;
+using Unity.Collections;
+using System.Threading;
+using System.Threading.Tasks;
 
 /// <summary>
 /// The Main Class of the Tool.
@@ -55,7 +59,7 @@ public class GPS : MonoBehaviour
     [SerializeField] private GameObject objectToResize;
 
 
-    [NonSerialized]public bool started = false;
+    [NonSerialized] public bool started = false;
 
     #endregion
 
@@ -77,7 +81,10 @@ public class GPS : MonoBehaviour
     {
         xrOrigin = origin.GetComponent<XROrigin>();
 
-        StartCoroutine(StartGPSAndCompassServiceAsync());
+        StartCoroutine(GetGPSPosition());
+        StartCoroutine(AdjustHeading());
+
+        StartLoadingTerrain();
     }
 
     private void Update()
@@ -95,6 +102,8 @@ public class GPS : MonoBehaviour
                 }
             }
         }
+
+
     }
 
     #endregion
@@ -103,7 +112,47 @@ public class GPS : MonoBehaviour
     /// <summary>
     /// Main Programm. Starts the Compass and the GPS. Gets the TerrainData from TerrainDataLoader and converts it into a Terrain, and places it accordingly.
     /// </summary>
-    public IEnumerator StartGPSAndCompassServiceAsync()
+    public async void StartLoadingTerrain()
+    {
+        string[] result = await GetTerrainData();
+        Thread thread = new Thread(() => TerrainCreation(result));
+
+        thread.Start();
+
+        thread.Join();
+        Debug.Log("Threads Joined");
+
+
+        {
+            /*
+            //EQUIRECTANGULAR
+            Vector2 glacierUnityLocation = CoordinateConverter.calculateRelativePositionEquirectangular2D(active, currentGpsLocation);
+            glacier.position = new Vector3((float)(glacierUnityLocation.x), glacier.position.y, glacierUnityLocation.y);
+
+            glacier.position = CalculatePositionOnTerrain(glacier);
+            glacier.position = new Vector3(glacier.position.x, glacier.position.y + unityTerrainParent.position.y, glacier.position.z);
+            */
+            
+            //Debug
+            if (debugVertices)
+            {
+                Mesh mesh = meshFilter.mesh;
+                Vector3[] vertices = mesh.vertices;
+
+                foreach (Vector3 vertex in vertices)
+                {
+                    // Convert local vertex position to world space
+                    Vector3 worldVertexPosition = transform.TransformPoint(vertex);
+                    Instantiate(vertexPrefab, worldVertexPosition, Quaternion.identity, transform);
+                }
+            }
+        }
+
+
+
+    }
+
+    private IEnumerator GetGPSPosition()
     {
         //GPS READING
         {
@@ -143,67 +192,17 @@ public class GPS : MonoBehaviour
                 {
                     currentGpsLocation = simulatedGpsLocation;
                     Debug.Log("Simulated gps location: " + currentGpsLocation.lat + " " + currentGpsLocation.lon + " " + currentGpsLocation.alt);
-                } else
+                }
+                else
                 {
                     Debug.Log("Current gps location: " + currentGpsLocation.lat + " " + currentGpsLocation.lon + " " + currentGpsLocation.alt);
                 }
             }
         }
+    }
 
-        // Load Ascii Grid from api
-        GetTerrainData((result) =>
-        {
-
-            // Terrain Creation
-            {
-                terrain.terrainData = TerrainDataLoader.CreateTerrainDataFromAsciiGrid(TerrainDataLoader.GetHeightsFromAsciiGrid(result, heightModel));
-                
-                // Set "resolution"
-                terrain.heightmapPixelError = 20;
-
-                terrain.materialTemplate = terrainMaterial;
-
-                // assign the data to the collider
-                terrainCollider.terrainData = terrain.terrainData;
-
-                float terrainSizeInMeters = terrain.terrainData.size.x;
-
-                // center the terrain
-                terrain.transform.position = new Vector3(
-                    -terrainSizeInMeters / 2,
-                    terrain.transform.position.y,
-                    -terrainSizeInMeters / 2);
-
-                // set height
-                Vector3 terrainHeight = CalculatePositionOnTerrain(origin, cameraHeightOffset);
-                unityTerrainParent.position = new Vector3(unityTerrainParent.position.x, -terrainHeight.y, unityTerrainParent.position.z);
-            }
-            
-            
-            //EQUIRECTANGULAR
-            Vector2 glacierUnityLocation = CoordinateConverter.calculateRelativePositionEquirectangular2D(active, currentGpsLocation);
-            glacier.position = new Vector3((float)(glacierUnityLocation.x), glacier.position.y, glacierUnityLocation.y);
-
-            glacier.position = CalculatePositionOnTerrain(glacier);
-            glacier.position = new Vector3(glacier.position.x, glacier.position.y + unityTerrainParent.position.y, glacier.position.z);
-
-
-            //Debug
-            if (debugVertices)
-            {
-                Mesh mesh = meshFilter.mesh;
-                Vector3[] vertices = mesh.vertices;
-
-                foreach (Vector3 vertex in vertices)
-                {
-                    // Convert local vertex position to world space
-                    Vector3 worldVertexPosition = transform.TransformPoint(vertex);
-                    Instantiate(vertexPrefab, worldVertexPosition, Quaternion.identity, transform);
-                }
-            }
-        });
-
-
+    private IEnumerator AdjustHeading()
+    {
         // Enable the compass
         Input.compass.enabled = true;
 
@@ -218,7 +217,35 @@ public class GPS : MonoBehaviour
         started = true;
     }
 
-    
+    private async void TerrainCreation(string[] result)
+    {
+        //string[] result = await GetTerrainData();
+        //string[] result = (string[])data;
+        terrain.terrainData = TerrainDataLoader.CreateTerrainDataFromAsciiGrid(TerrainDataLoader.GetHeightsFromAsciiGrid(result, heightModel));
+
+        /*
+        // Set "resolution"
+        terrain.heightmapPixelError = 20;
+
+        terrain.materialTemplate = terrainMaterial;
+
+        // assign the data to the collider
+        terrainCollider.terrainData = terrain.terrainData;
+
+        float terrainSizeInMeters = terrain.terrainData.size.x;
+
+        // center the terrain
+        terrain.transform.position = new Vector3(
+            -terrainSizeInMeters / 2,
+            terrain.transform.position.y,
+            -terrainSizeInMeters / 2);
+
+        // set height
+        Vector3 terrainHeight = CalculatePositionOnTerrain(origin, cameraHeightOffset);
+        unityTerrainParent.position = new Vector3(unityTerrainParent.position.x, -terrainHeight.y, unityTerrainParent.position.z);*/
+    }
+
+
     /// <summary>
     /// Calculates the Position on the Terrain.
     /// </summary>
@@ -239,7 +266,7 @@ public class GPS : MonoBehaviour
     /// <summary>
     /// Gets the TerrainData from TerrainDataLoader.
     /// </summary>
-    private async void GetTerrainData(Action<string[]> callback)
+    public async Task<string[]> GetTerrainData()
     {
         double range = meshRangeInMeters / 2;
 
@@ -257,7 +284,7 @@ public class GPS : MonoBehaviour
 
         string[] fileArray = data.Split(new char[] { '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries);
         Debug.Log("TerrainData from API: " + data);
-        callback(fileArray);
+        return  fileArray;
     }
 
     #endregion
