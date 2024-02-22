@@ -7,8 +7,9 @@ public class LoadingManager : MonoBehaviour
 {
 
     [SerializeField] private GameObject loadingScreen;
-    [SerializeField] private Slider loadingBar;
     [SerializeField] private TextMeshProUGUI loadingText;
+
+    [SerializeField] public Slider loadingBar;
 
 
 }

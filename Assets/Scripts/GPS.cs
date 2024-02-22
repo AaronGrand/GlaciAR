@@ -46,6 +46,9 @@ public class GPS : MonoBehaviour
 
     private MeshFilter meshFilter;
 
+    [Header("UI")]
+    [SerializeField] public LoadingManager loadingManager;
+
 
     [Header("Debug")]
     [SerializeField] private bool debugVertices;
@@ -83,8 +86,6 @@ public class GPS : MonoBehaviour
 
         StartCoroutine(GetGPSPosition());
         StartCoroutine(AdjustHeading());
-
-        StartLoadingTerrain();
     }
 
     private void Update()
@@ -115,12 +116,15 @@ public class GPS : MonoBehaviour
     public async void StartLoadingTerrain()
     {
         string[] result = await GetTerrainData();
+        /*
         Thread thread = new Thread(() => TerrainCreation(result));
 
         thread.Start();
 
         thread.Join();
-        Debug.Log("Threads Joined");
+        Debug.Log("Threads Joined");*/
+
+        TerrainCreation(result);
 
 
         {
@@ -217,7 +221,7 @@ public class GPS : MonoBehaviour
         started = true;
     }
 
-    private async void TerrainCreation(string[] result)
+    private void TerrainCreation(string[] result)
     {
         //string[] result = await GetTerrainData();
         //string[] result = (string[])data;

@@ -8,6 +8,7 @@ using UnityEngine.Networking;
 using Unity.Jobs;
 using Unity.Collections;
 using System.Threading;
+using UnityEngine.UI;
 
 /// <summary>
 /// Loads Terrain Data from OpenTopography.org.
@@ -39,15 +40,20 @@ public class TerrainDataLoader
         {
             UnityWebRequestAsyncOperation asyncOp = www.SendWebRequest();
 
+            Slider loadingBar = GPS.Instance.loadingManager.loadingBar;
+            loadingBar.value = 0;
+
             while (!asyncOp.isDone)
             {
                 float progress = asyncOp.progress;
                 ulong bytesDownloaded = www.downloadedBytes;
                 long bytesTotal = www.GetResponseHeader("Content-Length") != null ? long.Parse(www.GetResponseHeader("Content-Length")) : -1;
 
-                //if(bytesTotal != -1)
+                if(bytesTotal != -1)
                 {
                     Debug.Log($"Downloaded {bytesDownloaded} of {bytesTotal} bytes. {progress * 100}% completed.");
+                    loadingBar.maxValue = bytesTotal;
+                    loadingBar.value = bytesDownloaded;
                 }
 
                 await Task.Delay(50); // Wait for a short duration before checking again
@@ -118,10 +124,6 @@ public class TerrainDataLoader
     /// </summary>
     public static TerrainData CreateTerrainDataFromAsciiGrid(AsciiHeightData data)
     {
-        UnityMainThreadDispatcher.Instance().Enqueue(() =>
-        {
-
-        }
         TerrainData terrainData = new TerrainData();
         // max Heightmap Resolution
         terrainData.heightmapResolution = 4097;
