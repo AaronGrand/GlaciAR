@@ -46,6 +46,10 @@ public class GPS : MonoBehaviour
 
     private MeshFilter meshFilter;
 
+    [Header("Glaciers")]
+    [SerializeField] public Glacier[] glaciers;
+    public Glacier activeGlacier;
+
     [Header("UI")]
     [SerializeField] public LoadingManager loadingManager;
     [SerializeField] public SceneSelector sceneSelector;
@@ -117,28 +121,32 @@ public class GPS : MonoBehaviour
 
         StartCoroutine(GetGPSPosition());
 
-        StartCoroutine(AdjustHeading());
+        // Check if any glacier is in reach
+        bool foundActiveGlacier = false;
 
-        StartCoroutine(GetTerrainData(TerrainCreation));
-
+        foreach (Glacier glacier in glaciers)
         {
-            //Debug
-            if (debugVertices)
-            {
-                Mesh mesh = meshFilter.mesh;
-                Vector3[] vertices = mesh.vertices;
+            bool isWithinLat = currentGpsLocation.lat >= glacier.south && currentGpsLocation.lat <= glacier.north;
+            bool isWithinLon = currentGpsLocation.lon >= glacier.west && currentGpsLocation.lon <= glacier.east;
 
-                foreach (Vector3 vertex in vertices)
-                {
-                    // Convert local vertex position to world space
-                    Vector3 worldVertexPosition = transform.TransformPoint(vertex);
-                    Instantiate(vertexPrefab, worldVertexPosition, Quaternion.identity, transform);
-                }
+            if (isWithinLat && isWithinLon)
+            {
+                activeGlacier = glacier;
+                foundActiveGlacier = true;
+                break;
             }
         }
 
+        if (foundActiveGlacier)
+        {
+            StartCoroutine(AdjustHeading());
 
+            StartCoroutine(GetTerrainData(TerrainCreation));
 
+        } else {
+            throw new Exception("No active glacier found within the specified GPS coordinates.");
+            // Give feedback to the user to choose which glacier to simulate
+        }
     }
 
     private IEnumerator GetGPSPosition()
@@ -287,7 +295,7 @@ public class GPS : MonoBehaviour
         // Lon: 8.0201572
         // Elevation: 3811m
         // Distance approx. 33'000 / 2 = 16'500m
-
+        /*
         meshRangeInMeters = 33000;
         currentGpsLocation = new GpsData(46.4779410, 8.0201572, 0.0);
         
@@ -296,12 +304,17 @@ public class GPS : MonoBehaviour
 
         double latDegreeDistance = range / 111000.0; // Convert range to latitude degrees
         double lonDegreeDistance = range / (Math.Cos(currentGpsLocation.lat * Math.PI / 180) * 111000.0); // Convert range to longitude degrees
-
+        */
         yield return TerrainDataLoader.GetTerrainData(
+            /*
         currentGpsLocation.lat + latDegreeDistance,
         currentGpsLocation.lat - latDegreeDistance,
         currentGpsLocation.lon - lonDegreeDistance,
-        currentGpsLocation.lon + lonDegreeDistance,
+        currentGpsLocation.lon + lonDegreeDistance,*/
+        activeGlacier.north,
+        activeGlacier.south,
+        activeGlacier.west,
+        activeGlacier.east,
         openTopographyAPIKey, heightModel,
         (data) => {
             // This is the callback that will be called once the data is fetched

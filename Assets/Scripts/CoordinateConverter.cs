@@ -108,6 +108,7 @@ public static class CoordinateConverter
 /// <summary>
 /// A simple Vector3 class, but with doubles instead of floats.
 /// </summary>
+[System.Serializable]
 public class Vector3d
 {
     public double x;

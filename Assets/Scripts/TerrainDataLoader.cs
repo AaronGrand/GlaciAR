@@ -102,17 +102,19 @@ public class TerrainDataLoader
             }*/
         }
         
-        //fixing aspect ratio
-        int desiredAspectRatio = 1;
-        double currentAspectRatio = (double)ncols / nrows;
-        double scalingFactor = desiredAspectRatio / currentAspectRatio;
+        //IMPORTANT FOR NEW GLACIERS
 
-        Debug.Log("Scaling Factor: " + scalingFactor);
+        //fixing aspect ratio 
+        //int desiredAspectRatio = 1;
+        //double currentAspectRatio = (double)ncols / nrows;
+        //double scalingFactor = desiredAspectRatio / currentAspectRatio;
+
+        //Debug.Log("Scaling Factor: " + scalingFactor);
 
         AsciiHeightData data = new AsciiHeightData
         {
             heights = heights,
-            colScalingFactor = scalingFactor,
+            colScalingFactor = GPS.Instance.activeGlacier.scalingFactor,
             gridSizeInMeter = gridSizeInMeter,
             nrows = nrows,
             ncols = ncols
