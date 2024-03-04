@@ -11,17 +11,62 @@ public class LoadingManager : MonoBehaviour
 
     [SerializeField] public Slider loadingBar;
 
-    [SerializeField] public int downloadMaxProgress = 30;
+    private int downloadMaxProgress = 30;
+    private int headingMaxProgress = 10;
+    private int gpsMaxProgress = 10;
+    private int terrainDataMaxProgress = 50;
 
-    public void SetDownloadProgress(int percentage = 0)
+    private float currentProgress = 0f;
+
+    private void Update()
     {
-        loadingBar.value = (float)percentage / 100f * downloadMaxProgress;
+        Debug.Log(currentProgress);
     }
 
-    public void SetDownloadBarText(string text = "")
+    public void SetText(string text = "")
     {
         loadingText.text = text;
     }
 
+
+    public void SetDownloadProgress(int percentage = 0)
+    {
+        loadingBar.value = currentProgress + ((float)percentage / 100f * downloadMaxProgress);
+        
+        if (percentage == 100)
+        {
+            currentProgress += downloadMaxProgress;
+        }
+    }
+
+    public void SetTerrainDataProgress(int percentage = 0)
+    {
+        loadingBar.value = currentProgress + ((float)percentage / 100f * terrainDataMaxProgress);
+        
+        if (percentage == 100)
+        {
+            currentProgress += terrainDataMaxProgress;
+        }
+    }
+
+    public void SetHeadingProgress(int percentage = 0)
+    {
+        loadingBar.value = currentProgress + ((float)percentage / 100f * headingMaxProgress);
+
+        if (percentage == 100)
+        {
+            currentProgress += headingMaxProgress;
+        }
+    }
+
+    public void SetGPSProgress(int percentage = 0)
+    {
+        loadingBar.value = currentProgress + ((float)percentage / 100f * gpsMaxProgress);
+
+        if (percentage == 100)
+        {
+            currentProgress += gpsMaxProgress;
+        }
+    }
 
 }

@@ -48,6 +48,7 @@ public class GPS : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] public LoadingManager loadingManager;
+    [SerializeField] public SceneSelector sceneSelector;
 
 
     [Header("Debug")]
@@ -110,35 +111,17 @@ public class GPS : MonoBehaviour
     /// <summary>
     /// Main Programm. Starts the Compass and the GPS. Gets the TerrainData from TerrainDataLoader and converts it into a Terrain, and places it accordingly.
     /// </summary>
-    public void StartLoadingTerrain()
+    public void StartLoadingTerrain(bool simulateGPS)
     {
+        simulateGpsLocation = simulateGPS;
+
         StartCoroutine(GetGPSPosition());
+
         StartCoroutine(AdjustHeading());
+
         StartCoroutine(GetTerrainData(TerrainCreation));
 
-        //string[] result = await GetTerrainData();
-        /*
-        Thread thread = new Thread(() => TerrainCreation(result));
-
-        thread.Start();
-
-        thread.Join();
-        Debug.Log("Threads Joined");*/
-
-        //Debug.Log("Before TerrainCreation");
-        //TerrainCreation(result);
-
-
         {
-            /*
-            //EQUIRECTANGULAR
-            Vector2 glacierUnityLocation = CoordinateConverter.calculateRelativePositionEquirectangular2D(active, currentGpsLocation);
-            glacier.position = new Vector3((float)(glacierUnityLocation.x), glacier.position.y, glacierUnityLocation.y);
-
-            glacier.position = CalculatePositionOnTerrain(glacier);
-            glacier.position = new Vector3(glacier.position.x, glacier.position.y + unityTerrainParent.position.y, glacier.position.z);
-            */
-
             //Debug
             if (debugVertices)
             {
@@ -160,14 +143,18 @@ public class GPS : MonoBehaviour
 
     private IEnumerator GetGPSPosition()
     {
-        //GPS READING
+        if (!simulateGpsLocation)
         {
+            //GPS READING
             // Check if the user has location service enabled.
             if (!Input.location.isEnabledByUser)
                 Debug.Log("Location not enabled on device or app does not have permission to access location");
 
             // Starts the location service.
             Input.location.Start();
+
+            loadingManager.SetText("Start GPS");
+            loadingManager.SetHeadingProgress(30);
 
             // Waits until the location service initializes
             int maxWait = 20;
@@ -190,27 +177,24 @@ public class GPS : MonoBehaviour
                 Debug.LogError("Unable to determine device location");
                 yield break;
             }
-            else
-            {
-                currentGpsLocation = new GpsData(Input.location.lastData.latitude, Input.location.lastData.longitude, Input.location.lastData.altitude);
 
-                if (simulateGpsLocation)
-                {
-                    currentGpsLocation = simulatedGpsLocation;
-                    Debug.Log("Simulated gps location: " + currentGpsLocation.lat + " " + currentGpsLocation.lon + " " + currentGpsLocation.alt);
-                }
-                else
-                {
-                    Debug.Log("Current gps location: " + currentGpsLocation.lat + " " + currentGpsLocation.lon + " " + currentGpsLocation.alt);
-                }
-            }
+            currentGpsLocation = new GpsData(Input.location.lastData.latitude, Input.location.lastData.longitude, Input.location.lastData.altitude);
+        } 
+        else {
+            currentGpsLocation = simulatedGpsLocation;
         }
+
+        loadingManager.SetText("Positioning done");
+        loadingManager.SetHeadingProgress(100);
     }
 
     public IEnumerator AdjustHeading()
     {
         // Enable the compass
         Input.compass.enabled = true;
+
+        loadingManager.SetText("Reading Compass");
+        loadingManager.SetHeadingProgress(30);
 
         // Wait a bit for the compass to start
         yield return new WaitForSeconds(1f);
@@ -221,6 +205,9 @@ public class GPS : MonoBehaviour
         xrOrigin.MatchOriginUpCameraForward(Vector3.up, CoordinateConverter.HeadingToForwardVector(heading));
 
         started = true;
+
+        loadingManager.SetText("Adjust Heading");
+        loadingManager.SetHeadingProgress(100);
     }
 
     private void TerrainCreation(string[] result)
@@ -258,6 +245,15 @@ public class GPS : MonoBehaviour
         unityTerrainParent.position = new Vector3(unityTerrainParent.position.x, -terrainHeight.y, unityTerrainParent.position.z);
 
         Debug.Log("Terrain setup complete");
+
+        //EQUIRECTANGULAR
+        /*Vector2 glacierUnityLocation = CoordinateConverter.calculateRelativePositionEquirectangular2D(active, currentGpsLocation);
+        glacier.position = new Vector3((float)(glacierUnityLocation.x), glacier.position.y, glacierUnityLocation.y);
+
+        glacier.position = CalculatePositionOnTerrain(glacier);
+        glacier.position = new Vector3(glacier.position.x, glacier.position.y + unityTerrainParent.position.y, glacier.position.z);
+        */
+        sceneSelector.LoadingDoneUI();
     }
 
 
@@ -283,8 +279,20 @@ public class GPS : MonoBehaviour
     /// </summary>
     public IEnumerator GetTerrainData(Action<string[]> callback)
     {
-        double range = meshRangeInMeters / 2;
+        //choose which glacier we are at and download accordingly
 
+        // Location: Aletsch Gletscher
+        // Center: Dreieckhorn
+        // Lat: 46.4779410
+        // Lon: 8.0201572
+        // Elevation: 3811m
+        // Distance approx. 33'000 / 2 = 16'500m
+
+        meshRangeInMeters = 33000;
+        currentGpsLocation = new GpsData(46.4779410, 8.0201572, 0.0);
+        
+
+        double range = meshRangeInMeters / 2;
 
         double latDegreeDistance = range / 111000.0; // Convert range to latitude degrees
         double lonDegreeDistance = range / (Math.Cos(currentGpsLocation.lat * Math.PI / 180) * 111000.0); // Convert range to longitude degrees

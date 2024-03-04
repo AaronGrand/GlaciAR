@@ -42,24 +42,12 @@ public class TerrainDataLoader
         {
             www.SendWebRequest();
 
-            float lastProgress = 0f;
-            float currentProgress = 0f;
-            float progressRate = 0.5f; // Rate at which the progress bar will catch up to the actual download progress
-
             while (!www.isDone)
             {
-                currentProgress = www.downloadProgress;
+                GPS.Instance.loadingManager.SetText("Downloading Terrain");
+                // 99 prevents error
+                GPS.Instance.loadingManager.SetDownloadProgress((int)(www.downloadProgress * 99));
 
-                // Smooth out the progress update
-                while (lastProgress < currentProgress)
-                {
-                    lastProgress += progressRate * Time.deltaTime; // Control the rate of increment
-                    lastProgress = Mathf.Min(lastProgress, currentProgress); // Ensure no overshoot
-                    GPS.Instance.loadingManager.SetDownloadProgress((int)(lastProgress * 100));
-                    yield return null;
-                }
-
-                // Wait for a frame so that the loop doesn't run too fast
                 yield return null;
             }
 
@@ -71,9 +59,8 @@ public class TerrainDataLoader
             }
             else
             {
-                // Set progress to maximum when download is complete
-                GPS.Instance.loadingManager.SetDownloadProgress(GPS.Instance.loadingManager.downloadMaxProgress);
-
+                GPS.Instance.loadingManager.SetText("Terrain downloaded");
+                GPS.Instance.loadingManager.SetDownloadProgress(100);
                 // Handle successful download
                 callback(www.downloadHandler.text);
             }
@@ -107,18 +94,20 @@ public class TerrainDataLoader
             {
                 heights[row, col] = float.Parse(asciiLines[12 + row * ncols + col]);
             }
-
+            /*
             // Yield every few rows to spread the work over multiple frames
             if (row % YIELD_TIME == 0)
             {
                 yield return null;
-            }
+            }*/
         }
         
         //fixing aspect ratio
         int desiredAspectRatio = 1;
         double currentAspectRatio = (double)ncols / nrows;
         double scalingFactor = desiredAspectRatio / currentAspectRatio;
+
+        Debug.Log("Scaling Factor: " + scalingFactor);
 
         AsciiHeightData data = new AsciiHeightData
         {
@@ -129,6 +118,8 @@ public class TerrainDataLoader
             ncols = ncols
         };
 
+        yield return null;
+
         onCompleted?.Invoke(data);
     }
 
@@ -137,6 +128,9 @@ public class TerrainDataLoader
     /// </summary>
     public static IEnumerator CreateTerrainDataFromAsciiGridCoroutine(AsciiHeightData data, Action<TerrainData> callback)
     {
+        GPS.Instance.loadingManager.SetText("TerrainData");
+        GPS.Instance.loadingManager.SetTerrainDataProgress(0);
+
         Debug.Log("Creating Terraindata");
         TerrainData terrainData = new TerrainData();
         // max Heightmap Resolution
@@ -150,7 +144,13 @@ public class TerrainDataLoader
 
         int mRow = data.nrows * data.gridSizeInMeter;
 
+
+
         Debug.Log("Find min/max Height");
+
+        GPS.Instance.loadingManager.SetText("TerrainData min/max height");
+        GPS.Instance.loadingManager.SetTerrainDataProgress(20);
+
         //find max height
         float maxHeight = 0;
         float minHeight = heights[0, 0];
@@ -170,7 +170,12 @@ public class TerrainDataLoader
             }
         }
 
+
+
         Debug.Log("Rotate TerrainData");
+
+        GPS.Instance.loadingManager.SetText("TerrainData rotate");
+        GPS.Instance.loadingManager.SetTerrainDataProgress(30);
 
         //set terrain size
         terrainData.size = new Vector3(mRow, (maxHeight - minHeight), mRow);
@@ -189,9 +194,18 @@ public class TerrainDataLoader
             }
         }
 
+
+
         Debug.Log("Set Height on TerrainData");
+
+        GPS.Instance.loadingManager.SetText("Creating TerrainData");
+        GPS.Instance.loadingManager.SetTerrainDataProgress(50);
+
         yield return TerrainDataLoader.SetHeightsCoroutine(terrainData, fHeights);
         Debug.Log("TerrainDataLoader done");
+        
+        GPS.Instance.loadingManager.SetText("TerrainData created");
+        GPS.Instance.loadingManager.SetTerrainDataProgress(100);
 
         // Use a callback to return the terrain data once processing is complete
         callback(terrainData);
@@ -220,11 +234,13 @@ public class TerrainDataLoader
                 }
 
                 terrainData.SetHeightsDelayLOD(x, y, chunkHeights);
-
-                // After setting each chunk, yield to spread the work across frames
-                yield return null;
             }
+
+            GPS.Instance.loadingManager.SetTerrainDataProgress((int)((float)50 / height) * 100 * y);
+            yield return null;
         }
+
+        yield return null;
 
         // After all chunks have been processed, apply all changes
         terrainData.SyncHeightmap();

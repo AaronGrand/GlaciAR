@@ -15,7 +15,7 @@ public class SceneSelector : MonoBehaviour
         startScreen.SetActive(true);
     }
 
-    public void OnLoad(int index)
+    public void OnLoad(bool simulateGPS)
     {
         /*if (index == 0)
         {
@@ -24,15 +24,20 @@ public class SceneSelector : MonoBehaviour
         {
             GPS.Instance.enabled = true;
         }*/
-        LoadGlacier();
-        SceneManager.LoadSceneAsync(index);
+        LoadGlacierUI();
 
-        GPS.Instance.StartLoadingTerrain();
+        GPS.Instance.StartLoadingTerrain(simulateGPS);
     }
 
-    private void LoadGlacier()
+    private void LoadGlacierUI()
     {
         loadingScreen.SetActive(true);
+        startScreen.SetActive(false);
+    }
+
+    public void LoadingDoneUI()
+    {
+        loadingScreen.SetActive(false);
         startScreen.SetActive(false);
     }
 
