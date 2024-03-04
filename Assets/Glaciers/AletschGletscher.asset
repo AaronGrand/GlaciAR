@@ -25,8 +25,7 @@ MonoBehaviour:
   east: 8.23601742882546
   meshRangeInMeters: 33000
   fbxModel: {fileID: 919132149155446097, guid: c57eb59182ebdcb47902b1af8afe9ecf, type: 3}
-  scaling:
-    x: -0.688545688545689
-    y: 1
-    z: -0.688545688545689
-  aspectRatio: 0.688545688545689
+  position: {x: 0, y: 100, z: 0}
+  rotation: {x: 0, y: 0, z: 0}
+  scaling: {x: -0.6885457, y: 1, z: -0.6885457}
+  scalingFactor: 0.688545688545689

@@ -28,6 +28,10 @@ public class LoadingManager : MonoBehaviour
         loadingText.text = text;
     }
 
+    public void ResetProgress()
+    {
+        currentProgress = 0;
+    }
 
     public void SetDownloadProgress(int percentage = 0)
     {

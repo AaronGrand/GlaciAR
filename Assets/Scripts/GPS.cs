@@ -49,6 +49,10 @@ public class GPS : MonoBehaviour
     [Header("Glaciers")]
     [SerializeField] public Glacier[] glaciers;
     public Glacier activeGlacier;
+    private GameObject glacierGameObject;
+
+    [SerializeField] public bool simulateGpsLocation;
+    [SerializeField] public GpsData simulatedGpsLocation;
 
     [Header("UI")]
     [SerializeField] public LoadingManager loadingManager;
@@ -56,15 +60,8 @@ public class GPS : MonoBehaviour
 
 
     [Header("Debug")]
-    [SerializeField] private bool debugVertices;
-    [SerializeField] private GameObject vertexPrefab;
-    [SerializeField] private bool gpsAltitudeDebugging;
-
-    [SerializeField] public bool simulateGpsLocation;
-    [SerializeField] public GpsData simulatedGpsLocation;
-
-
-    [SerializeField] private GameObject objectToResize;
+    [SerializeField] public bool simulateEditorLocation = false;
+    [SerializeField] public GpsData simulatedEditorLocation;
 
 
     [NonSerialized] public bool started = false;
@@ -119,44 +116,73 @@ public class GPS : MonoBehaviour
     {
         simulateGpsLocation = simulateGPS;
 
-        StartCoroutine(GetGPSPosition());
+        StartCoroutine(GetGPSPosition(() => {
 
-        // Check if any glacier is in reach
-        bool foundActiveGlacier = false;
-
-        foreach (Glacier glacier in glaciers)
-        {
-            bool isWithinLat = currentGpsLocation.lat >= glacier.south && currentGpsLocation.lat <= glacier.north;
-            bool isWithinLon = currentGpsLocation.lon >= glacier.west && currentGpsLocation.lon <= glacier.east;
-
-            if (isWithinLat && isWithinLon)
+            //ONLY IN UNITY EDITOR
+            if (simulateEditorLocation)
             {
-                activeGlacier = glacier;
-                foundActiveGlacier = true;
-                break;
+                currentGpsLocation = simulatedEditorLocation;
             }
-        }
 
-        if (foundActiveGlacier)
-        {
-            StartCoroutine(AdjustHeading());
 
-            StartCoroutine(GetTerrainData(TerrainCreation));
+            bool foundActiveGlacier = false;
 
-        } else {
-            throw new Exception("No active glacier found within the specified GPS coordinates.");
-            // Give feedback to the user to choose which glacier to simulate
-        }
+            if (!simulateGpsLocation)
+            {
+                // Check if any glacier is in reach
+
+                foreach (Glacier glacier in glaciers)
+                {
+                    bool isWithinLat = currentGpsLocation.lat >= glacier.south && currentGpsLocation.lat <= glacier.north;
+                    bool isWithinLon = currentGpsLocation.lon >= glacier.west && currentGpsLocation.lon <= glacier.east;
+
+                    Debug.Log(isWithinLat + " " + isWithinLon);
+
+                    if (isWithinLat && isWithinLon)
+                    {
+                        activeGlacier = glacier;
+                        foundActiveGlacier = true;
+                        break;
+                    }
+                }
+            } else
+            {
+                foundActiveGlacier = true;
+                activeGlacier = glaciers[0];
+            }
+
+            if (foundActiveGlacier)
+            {
+                StartCoroutine(AdjustHeading());
+
+                StartCoroutine(GetTerrainData(TerrainCreation));
+
+                //Instantiate Glacier
+                glacierGameObject = Instantiate(activeGlacier.fbxModel, glacier);
+                // Get all Transforms
+                glacierGameObject.transform.position = new Vector3(activeGlacier.position.x, activeGlacier.position.y, activeGlacier.position.z);
+                glacierGameObject.transform.localScale = new Vector3(activeGlacier.scaling.x, activeGlacier.scaling.y, activeGlacier.scaling.z);
+                glacierGameObject.transform.rotation = Quaternion.Euler(activeGlacier.rotation.x, activeGlacier.rotation.y, activeGlacier.rotation.z);
+
+            }
+            else
+            {
+                throw new Exception("No active glacier found within the specified GPS coordinates.");
+                // Give feedback to the user to choose which glacier to simulate
+            }
+        }));
     }
 
-    private IEnumerator GetGPSPosition()
+    private IEnumerator GetGPSPosition(Action onComplete)
     {
         if (!simulateGpsLocation)
         {
             //GPS READING
             // Check if the user has location service enabled.
             if (!Input.location.isEnabledByUser)
+            {
                 Debug.Log("Location not enabled on device or app does not have permission to access location");
+            }
 
             // Starts the location service.
             Input.location.Start();
@@ -194,6 +220,8 @@ public class GPS : MonoBehaviour
 
         loadingManager.SetText("Positioning done");
         loadingManager.SetHeadingProgress(100);
+
+        onComplete?.Invoke();
     }
 
     public IEnumerator AdjustHeading()
@@ -260,6 +288,14 @@ public class GPS : MonoBehaviour
 
         glacier.position = CalculatePositionOnTerrain(glacier);
         glacier.position = new Vector3(glacier.position.x, glacier.position.y + unityTerrainParent.position.y, glacier.position.z);
+        */
+
+        // Set Player Position on the terrain
+        /*Vector2 playerPosition = CoordinateConverter.calculateRelativePositionEquirectangular2D(currentGpsLocation, activeGlacier.centerPosition);
+        origin.position = new Vector3((float)(playerPosition.x), xrOrigin.transform.position.y, playerPosition.y);
+
+        origin.position = CalculatePositionOnTerrain(origin);
+        origin.position = new Vector3(origin.position.x, origin.position.y + unityTerrainParent.position.y, origin.position.z);
         */
         sceneSelector.LoadingDoneUI();
     }

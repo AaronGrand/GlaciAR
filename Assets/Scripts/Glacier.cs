@@ -16,6 +16,9 @@ public class Glacier : ScriptableObject
 
     public int meshRangeInMeters;
     public GameObject fbxModel; // Reference to an FBX model prefab
-    public Vector3d scaling; // Vector3 representing the glacier's aspect ratio
+    public Vector3 position; // Vector3 representing the glacier's rotation
+    public Vector3 rotation; // Vector3 representing the glacier's rotation
+    public Vector3 scaling; // Vector3 representing the glacier's aspect ratio
+
     public double scalingFactor;
 }

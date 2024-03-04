@@ -24,6 +24,8 @@ public class SceneSelector : MonoBehaviour
         {
             GPS.Instance.enabled = true;
         }*/
+
+        GPS.Instance.loadingManager.ResetProgress();
         LoadGlacierUI();
 
         GPS.Instance.StartLoadingTerrain(simulateGPS);

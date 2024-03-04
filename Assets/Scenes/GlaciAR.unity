@@ -1797,18 +1797,21 @@ MonoBehaviour:
   terrainCollider: {fileID: 1994378164}
   glaciers:
   - {fileID: 11400000, guid: 1c53789eb65609b448d4499fe46ff9d6, type: 2}
-  loadingManager: {fileID: 148761459}
-  sceneSelector: {fileID: 1194080253}
-  debugVertices: 0
-  vertexPrefab: {fileID: 0}
-  gpsAltitudeDebugging: 0
+  activeGlacier: {fileID: 0}
   simulateGpsLocation: 1
   simulatedGpsLocation:
+    name: 
+    lat: 0
+    lon: 0
+    alt: 0
+  loadingManager: {fileID: 148761459}
+  sceneSelector: {fileID: 1194080253}
+  simulateEditorLocation: 0
+  simulatedEditorLocation:
     name: Moosfluh
     lat: 46.396045
     lon: 8.048039
     alt: 0
-  objectToResize: {fileID: 0}
 --- !u!114 &1194080253
 MonoBehaviour:
   m_ObjectHideFlags: 0
