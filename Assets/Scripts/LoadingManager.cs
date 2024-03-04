@@ -11,5 +11,17 @@ public class LoadingManager : MonoBehaviour
 
     [SerializeField] public Slider loadingBar;
 
+    [SerializeField] public int downloadMaxProgress = 30;
+
+    public void SetDownloadProgress(int percentage = 0)
+    {
+        loadingBar.value = (float)percentage / 100f * downloadMaxProgress;
+    }
+
+    public void SetDownloadBarText(string text = "")
+    {
+        loadingText.text = text;
+    }
+
 
 }

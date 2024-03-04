@@ -9,12 +9,14 @@ using Unity.Jobs;
 using Unity.Collections;
 using System.Threading;
 using UnityEngine.UI;
+using System.Collections;
 
 /// <summary>
 /// Loads Terrain Data from OpenTopography.org.
 /// </summary>
 public class TerrainDataLoader
 {
+    private static int YIELD_TIME = 10;
 
     public static int MAX_VERTICES_PER_MESH = 65535;
     public static int EarthRadius = 6371000;
@@ -29,7 +31,7 @@ public class TerrainDataLoader
     /// <summary>
     /// Gets a GeoTiff file in string format from GPS-boundaries from OpenTopography.org API.
     /// </summary>
-    public static async Task<string> GetTerrainData(double gpsNorth, double gpsSouth, double gpsWest, double gpsEast, string apiKey, HeightModels heightModel)
+    public static IEnumerator GetTerrainData(double gpsNorth, double gpsSouth, double gpsWest, double gpsEast, string apiKey, HeightModels heightModel, Action<string> callback)
     {
         string heightM = HeightModelUtility.GetAPIReference(heightModel);
 
@@ -38,56 +40,64 @@ public class TerrainDataLoader
 
         using (UnityWebRequest www = UnityWebRequest.Get(fullUrl))
         {
-            UnityWebRequestAsyncOperation asyncOp = www.SendWebRequest();
+            www.SendWebRequest();
 
-            Slider loadingBar = GPS.Instance.loadingManager.loadingBar;
-            loadingBar.value = 0;
+            float lastProgress = 0f;
+            float currentProgress = 0f;
+            float progressRate = 0.5f; // Rate at which the progress bar will catch up to the actual download progress
 
-            while (!asyncOp.isDone)
+            while (!www.isDone)
             {
-                float progress = asyncOp.progress;
-                ulong bytesDownloaded = www.downloadedBytes;
-                long bytesTotal = www.GetResponseHeader("Content-Length") != null ? long.Parse(www.GetResponseHeader("Content-Length")) : -1;
+                currentProgress = www.downloadProgress;
 
-                if(bytesTotal != -1)
+                // Smooth out the progress update
+                while (lastProgress < currentProgress)
                 {
-                    Debug.Log($"Downloaded {bytesDownloaded} of {bytesTotal} bytes. {progress * 100}% completed.");
-                    loadingBar.maxValue = bytesTotal;
-                    loadingBar.value = bytesDownloaded;
+                    lastProgress += progressRate * Time.deltaTime; // Control the rate of increment
+                    lastProgress = Mathf.Min(lastProgress, currentProgress); // Ensure no overshoot
+                    GPS.Instance.loadingManager.SetDownloadProgress((int)(lastProgress * 100));
+                    yield return null;
                 }
 
-                await Task.Delay(50); // Wait for a short duration before checking again
+                // Wait for a frame so that the loop doesn't run too fast
+                yield return null;
             }
 
+            // Check if the request completed successfully
             if (www.result != UnityWebRequest.Result.Success)
             {
                 Debug.Log("Error: " + www.error);
-                return null;
+                callback(null);
             }
             else
             {
-                return www.downloadHandler.text;
+                // Set progress to maximum when download is complete
+                GPS.Instance.loadingManager.SetDownloadProgress(GPS.Instance.loadingManager.downloadMaxProgress);
+
+                // Handle successful download
+                callback(www.downloadHandler.text);
             }
         }
     }
 
-    
+
     /// <summary>
     /// Creates AsciiHeightData from a given AsciiGrid[] and a heightModel.
     /// </summary>
-    public static AsciiHeightData GetHeightsFromAsciiGrid(string[] asciiLines, HeightModels heightModel)
+    public static IEnumerator GetHeightsFromAsciiGrid(string[] asciiLines, HeightModels heightModel, Action<AsciiHeightData> onCompleted)
     {
+        Debug.Log("Getting Heights from AsciiGrid");
         int gridSizeInMeter = HeightModelUtility.GetGridSize(heightModel);
 
         // Parse metadata
         int ncols = int.Parse(asciiLines[1]);
         int nrows = int.Parse(asciiLines[3]);
 
-        double xllcorner = double.Parse(asciiLines[5]);
-        double yllcorner = double.Parse(asciiLines[7]);
+        //double xllcorner = double.Parse(asciiLines[5]);
+        //double yllcorner = double.Parse(asciiLines[7]);
 
-        double cellsize = double.Parse(asciiLines[9]);
-        double nodata_value = double.Parse(asciiLines[11]);
+        //double cellsize = double.Parse(asciiLines[9]);
+        //double nodata_value = double.Parse(asciiLines[11]);
 
         // Extracting the height data
         float[,] heights = new float[nrows, ncols];
@@ -97,6 +107,12 @@ public class TerrainDataLoader
             {
                 heights[row, col] = float.Parse(asciiLines[12 + row * ncols + col]);
             }
+
+            // Yield every few rows to spread the work over multiple frames
+            if (row % YIELD_TIME == 0)
+            {
+                yield return null;
+            }
         }
         
         //fixing aspect ratio
@@ -104,26 +120,24 @@ public class TerrainDataLoader
         double currentAspectRatio = (double)ncols / nrows;
         double scalingFactor = desiredAspectRatio / currentAspectRatio;
 
-        double rowOffsetToMiddle = nrows * gridSizeInMeter / 2;
-        double colOffsetToMiddle = ncols * scalingFactor * gridSizeInMeter / 2;
-        
-        AsciiHeightData data;
+        AsciiHeightData data = new AsciiHeightData
+        {
+            heights = heights,
+            colScalingFactor = scalingFactor,
+            gridSizeInMeter = gridSizeInMeter,
+            nrows = nrows,
+            ncols = ncols
+        };
 
-        data.heights = heights;
-        data.colScalingFactor = scalingFactor;
-        data.gridSizeInMeter = gridSizeInMeter;
-
-        data.nrows = nrows;
-        data.ncols = ncols;
-
-        return data;
+        onCompleted?.Invoke(data);
     }
 
     /// <summary>
     /// Creates TerrainData from a given AsciiHeightData.
     /// </summary>
-    public static TerrainData CreateTerrainDataFromAsciiGrid(AsciiHeightData data)
+    public static IEnumerator CreateTerrainDataFromAsciiGridCoroutine(AsciiHeightData data, Action<TerrainData> callback)
     {
+        Debug.Log("Creating Terraindata");
         TerrainData terrainData = new TerrainData();
         // max Heightmap Resolution
         terrainData.heightmapResolution = 4097;
@@ -136,24 +150,27 @@ public class TerrainDataLoader
 
         int mRow = data.nrows * data.gridSizeInMeter;
 
+        Debug.Log("Find min/max Height");
         //find max height
-        int maxHeight = 0;
-        int minHeight = (int)heights[0, 0];
+        float maxHeight = 0;
+        float minHeight = heights[0, 0];
         for (int i = 0; i < originalRows; i++)
         {
             for (int j = 0; j < originalCols; j++)
             {
                 if (heights[i, j] > maxHeight)
                 {
-                    maxHeight = (int)heights[i, j];
+                    maxHeight = heights[i, j];
                 }
 
                 if (heights[i, j] < minHeight)
                 {
-                    minHeight = (int)heights[i, j];
+                    minHeight = heights[i, j];
                 }
             }
         }
+
+        Debug.Log("Rotate TerrainData");
 
         //set terrain size
         terrainData.size = new Vector3(mRow, (maxHeight - minHeight), mRow);
@@ -168,13 +185,49 @@ public class TerrainDataLoader
             for (int j = 0; j < originalCols; j++)
             {
                 // Rotating 90 degrees counter-clockwise
-                fHeights[newRows - 1 - j, i] = (heights[i, j] - minHeight) / (maxHeight - minHeight) + (minHeight / (maxHeight - minHeight));
+                fHeights[newRows - 1 - j, i] = (heights[i, j] - minHeight) / (maxHeight - minHeight);   
             }
         }
 
-        terrainData.SetHeights(0, 0, fHeights);
+        Debug.Log("Set Height on TerrainData");
+        yield return TerrainDataLoader.SetHeightsCoroutine(terrainData, fHeights);
+        Debug.Log("TerrainDataLoader done");
 
-        return terrainData;
+        // Use a callback to return the terrain data once processing is complete
+        callback(terrainData);
+    }
+
+    private static IEnumerator SetHeightsCoroutine(TerrainData terrainData, float[,] fHeights)
+    {
+        int width = fHeights.GetLength(0);
+        int height = fHeights.GetLength(1);
+
+        const int chunkSize = 1000; // Size of the chunk to update at once, adjust based on performance
+        for (int y = 0; y < height; y += chunkSize)
+        {
+            for (int x = 0; x < width; x += chunkSize)
+            {
+                int chunkWidth = Mathf.Min(chunkSize, width - x);
+                int chunkHeight = Mathf.Min(chunkSize, height - y);
+
+                float[,] chunkHeights = new float[chunkHeight, chunkWidth];
+                for (int i = 0; i < chunkHeight; i++)
+                {
+                    for (int j = 0; j < chunkWidth; j++)
+                    {
+                        chunkHeights[i, j] = fHeights[y + i, x + j];
+                    }
+                }
+
+                terrainData.SetHeightsDelayLOD(x, y, chunkHeights);
+
+                // After setting each chunk, yield to spread the work across frames
+                yield return null;
+            }
+        }
+
+        // After all chunks have been processed, apply all changes
+        terrainData.SyncHeightmap();
     }
 
     /// <summary>
@@ -185,7 +238,7 @@ public class TerrainDataLoader
         int originalWidth = originalHeights.GetLength(1);
         int originalHeight = originalHeights.GetLength(0);
         float[,] resampledHeights = new float[newResolution, newResolution];
-
+        
         for (int i = 0; i < newResolution; i++)
         {
             for (int j = 0; j < newResolution; j++)
@@ -217,7 +270,7 @@ public class TerrainDataLoader
                 resampledHeights[i, j] = top * (1 - yWeight) + bottom * yWeight;
             }
         }
-
+        
         return resampledHeights;
     }
 

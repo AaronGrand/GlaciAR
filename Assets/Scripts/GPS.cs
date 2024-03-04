@@ -83,9 +83,6 @@ public class GPS : MonoBehaviour
     private void Start()
     {
         xrOrigin = origin.GetComponent<XROrigin>();
-
-        StartCoroutine(GetGPSPosition());
-        StartCoroutine(AdjustHeading());
     }
 
     private void Update()
@@ -113,9 +110,13 @@ public class GPS : MonoBehaviour
     /// <summary>
     /// Main Programm. Starts the Compass and the GPS. Gets the TerrainData from TerrainDataLoader and converts it into a Terrain, and places it accordingly.
     /// </summary>
-    public async void StartLoadingTerrain()
+    public void StartLoadingTerrain()
     {
-        string[] result = await GetTerrainData();
+        StartCoroutine(GetGPSPosition());
+        StartCoroutine(AdjustHeading());
+        StartCoroutine(GetTerrainData(TerrainCreation));
+
+        //string[] result = await GetTerrainData();
         /*
         Thread thread = new Thread(() => TerrainCreation(result));
 
@@ -124,7 +125,8 @@ public class GPS : MonoBehaviour
         thread.Join();
         Debug.Log("Threads Joined");*/
 
-        TerrainCreation(result);
+        //Debug.Log("Before TerrainCreation");
+        //TerrainCreation(result);
 
 
         {
@@ -136,7 +138,7 @@ public class GPS : MonoBehaviour
             glacier.position = CalculatePositionOnTerrain(glacier);
             glacier.position = new Vector3(glacier.position.x, glacier.position.y + unityTerrainParent.position.y, glacier.position.z);
             */
-            
+
             //Debug
             if (debugVertices)
             {
@@ -205,7 +207,7 @@ public class GPS : MonoBehaviour
         }
     }
 
-    private IEnumerator AdjustHeading()
+    public IEnumerator AdjustHeading()
     {
         // Enable the compass
         Input.compass.enabled = true;
@@ -223,11 +225,18 @@ public class GPS : MonoBehaviour
 
     private void TerrainCreation(string[] result)
     {
-        //string[] result = await GetTerrainData();
-        //string[] result = (string[])data;
-        terrain.terrainData = TerrainDataLoader.CreateTerrainDataFromAsciiGrid(TerrainDataLoader.GetHeightsFromAsciiGrid(result, heightModel));
+        StartCoroutine(TerrainDataLoader.GetHeightsFromAsciiGrid(result, heightModel, OnHeightDataReady));
+    }
 
-        /*
+    private void OnHeightDataReady(AsciiHeightData heightData)
+    {
+        StartCoroutine(TerrainDataLoader.CreateTerrainDataFromAsciiGridCoroutine(heightData, OnTerrainDataReady));
+    }
+
+    void OnTerrainDataReady(TerrainData terrainData)
+    {
+        terrain.terrainData = terrainData;
+
         // Set "resolution"
         terrain.heightmapPixelError = 20;
 
@@ -246,7 +255,9 @@ public class GPS : MonoBehaviour
 
         // set height
         Vector3 terrainHeight = CalculatePositionOnTerrain(origin, cameraHeightOffset);
-        unityTerrainParent.position = new Vector3(unityTerrainParent.position.x, -terrainHeight.y, unityTerrainParent.position.z);*/
+        unityTerrainParent.position = new Vector3(unityTerrainParent.position.x, -terrainHeight.y, unityTerrainParent.position.z);
+
+        Debug.Log("Terrain setup complete");
     }
 
 
@@ -270,7 +281,7 @@ public class GPS : MonoBehaviour
     /// <summary>
     /// Gets the TerrainData from TerrainDataLoader.
     /// </summary>
-    public async Task<string[]> GetTerrainData()
+    public IEnumerator GetTerrainData(Action<string[]> callback)
     {
         double range = meshRangeInMeters / 2;
 
@@ -278,17 +289,18 @@ public class GPS : MonoBehaviour
         double latDegreeDistance = range / 111000.0; // Convert range to latitude degrees
         double lonDegreeDistance = range / (Math.Cos(currentGpsLocation.lat * Math.PI / 180) * 111000.0); // Convert range to longitude degrees
 
-        string data = await TerrainDataLoader.GetTerrainData(
-            currentGpsLocation.lat + latDegreeDistance,
-            currentGpsLocation.lat - latDegreeDistance,
-            currentGpsLocation.lon - lonDegreeDistance,
-            currentGpsLocation.lon + lonDegreeDistance,
-            openTopographyAPIKey, heightModel);
-
-
-        string[] fileArray = data.Split(new char[] { '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-        Debug.Log("TerrainData from API: " + data);
-        return  fileArray;
+        yield return TerrainDataLoader.GetTerrainData(
+        currentGpsLocation.lat + latDegreeDistance,
+        currentGpsLocation.lat - latDegreeDistance,
+        currentGpsLocation.lon - lonDegreeDistance,
+        currentGpsLocation.lon + lonDegreeDistance,
+        openTopographyAPIKey, heightModel,
+        (data) => {
+            // This is the callback that will be called once the data is fetched
+            string[] fileArray = data.Split(new char[] { '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            Debug.Log("TerrainData from API: " + data);
+            callback(fileArray); // Call the callback with the fetched data
+        });
     }
 
     #endregion

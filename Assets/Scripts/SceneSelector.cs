@@ -28,30 +28,6 @@ public class SceneSelector : MonoBehaviour
         SceneManager.LoadSceneAsync(index);
 
         GPS.Instance.StartLoadingTerrain();
-        
-        //StartCoroutine(LoadSceneCoroutine(index));
-    }
-
-    IEnumerator LoadSceneCoroutine(int index)
-    {
-        //LoadGlacier();
-
-        // Load the scene asynchronously
-        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(index);
-
-        // Wait until the scene is fully loaded
-        while (!asyncLoad.isDone)
-        {
-            yield return null;
-        }
-
-        if (GPS.Instance.started)
-        {
-            GPS.Instance.StartLoadingTerrain();
-        }
-
-        // Unload the scene
-        SceneManager.UnloadSceneAsync(index);
     }
 
     private void LoadGlacier()

@@ -479,6 +479,7 @@ MonoBehaviour:
   loadingScreen: {fileID: 148761454}
   loadingText: {fileID: 1468617801}
   loadingBar: {fileID: 673330903}
+  downloadMaxProgress: 30
 --- !u!1 &314147915
 GameObject:
   m_ObjectHideFlags: 0
@@ -1287,7 +1288,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 689276103}
   m_Direction: 0
   m_MinValue: 0
-  m_MaxValue: 1
+  m_MaxValue: 100
   m_WholeNumbers: 0
   m_Value: 0
   m_OnValueChanged:
@@ -1507,7 +1508,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.98039216, g: 0.7647059, b: 0, a: 1}
+  m_Color: {r: 0, g: 0.7319537, b: 0.98039216, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1636,7 +1637,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1194080248}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: aacd71ea4149e5a4ea03b600d9a2d07f, type: 3}
   m_Name: 
@@ -1657,7 +1658,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   terrainMaterial: {fileID: 2100000, guid: 57406f4dcea55ea45821641aeb83a502, type: 2}
-  meshRangeInMeters: 11790
+  meshRangeInMeters: 50000
   unityTerrainParent: {fileID: 1994378163}
   terrain: {fileID: 1994378165}
   terrainCollider: {fileID: 1994378164}
