@@ -31,6 +31,9 @@ public class GPS : MonoBehaviour
     [SerializeField] private float cameraHeightOffset;
     [SerializeField] private Transform glacier;
 
+    [SerializeField] public CameraFeedToTexture cameraFeedToTexture;
+    [SerializeField] private Transform world;
+
     [Header("Terrain")]
     [SerializeField] private HeightModels heightModel;
     [SerializeField] private string openTopographyAPIKey;
@@ -101,8 +104,16 @@ public class GPS : MonoBehaviour
                     cameraOffset.transform.Rotate(0, rotationAmount, 0);
                 }
             }
-        }
 
+            // Update the Material for SeeThrough
+            terrainMaterial.SetTexture("_CameraFeedTex", cameraFeedToTexture.cameraTexture);
+
+            Debug.Log("XROrigin Rotation: " + xrOrigin.transform.rotation);
+            Debug.Log("XROrigin Position: " + xrOrigin.transform.position);
+            Debug.Log("World Position: " + world.position);
+            Debug.Log("TerrainParent Position: " + unityTerrainParent.position);
+
+        }
 
     }
 
@@ -122,6 +133,12 @@ public class GPS : MonoBehaviour
             if (simulateEditorLocation)
             {
                 currentGpsLocation = simulatedEditorLocation;
+            }
+
+            // Simulated GPS (Not on site)
+            if (simulateGpsLocation)
+            {
+                currentGpsLocation = glaciers[0].centerPosition;
             }
 
 
@@ -215,7 +232,7 @@ public class GPS : MonoBehaviour
             currentGpsLocation = new GpsData(Input.location.lastData.latitude, Input.location.lastData.longitude, Input.location.lastData.altitude);
         } 
         else {
-            currentGpsLocation = simulatedGpsLocation;
+            // NO GPS LOCATION
         }
 
         loadingManager.SetText("Positioning done");
@@ -279,6 +296,7 @@ public class GPS : MonoBehaviour
         // set height
         Vector3 terrainHeight = CalculatePositionOnTerrain(origin, cameraHeightOffset);
         unityTerrainParent.position = new Vector3(unityTerrainParent.position.x, -terrainHeight.y, unityTerrainParent.position.z);
+        // set glacier position here
 
         Debug.Log("Terrain setup complete");
 
@@ -290,13 +308,16 @@ public class GPS : MonoBehaviour
         glacier.position = new Vector3(glacier.position.x, glacier.position.y + unityTerrainParent.position.y, glacier.position.z);
         */
 
-        // Set Player Position on the terrain
-        /*Vector2 playerPosition = CoordinateConverter.calculateRelativePositionEquirectangular2D(currentGpsLocation, activeGlacier.centerPosition);
-        origin.position = new Vector3((float)(playerPosition.x), xrOrigin.transform.position.y, playerPosition.y);
+        if (!simulateGpsLocation)
+        {
+            // Set Player Position on the terrain
+            Vector2 playerPosition = CoordinateConverter.calculateRelativePositionEquirectangular2D(activeGlacier.centerPosition, currentGpsLocation);
+            world.position = new Vector3((float)(playerPosition.x), world.position.y, playerPosition.y);
 
-        origin.position = CalculatePositionOnTerrain(origin);
-        origin.position = new Vector3(origin.position.x, origin.position.y + unityTerrainParent.position.y, origin.position.z);
-        */
+            world.position = CalculatePositionOnTerrain(world);
+            world.position = new Vector3(world.position.x, world.position.y - unityTerrainParent.position.y - CalculatePositionOnTerrain(xrOrigin.transform).y - cameraHeightOffset, world.position.z);
+        }
+        
         sceneSelector.LoadingDoneUI();
     }
 
