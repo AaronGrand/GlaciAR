@@ -15,8 +15,8 @@ MonoBehaviour:
   glacierName: AletschGletscher
   centerPosition:
     name: Dreieckorn
-    lat: 46.477941
-    lon: 8.0201572
+    lat: 46.477998
+    lon: 8.020166
     alt: 0
   elevation: 3811
   south: 46.3292923513514
@@ -27,5 +27,5 @@ MonoBehaviour:
   fbxModel: {fileID: 919132149155446097, guid: c57eb59182ebdcb47902b1af8afe9ecf, type: 3}
   position: {x: 0, y: 0, z: 0}
   rotation: {x: 0, y: 0, z: 0}
-  scaling: {x: -0.6885457, y: 1, z: -0.6885457}
+  scaling: {x: -1, y: 1, z: -1}
   scalingFactor: 0.688545688545689

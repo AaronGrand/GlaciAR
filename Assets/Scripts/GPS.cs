@@ -53,6 +53,7 @@ public class GPS : MonoBehaviour
     [SerializeField] public Glacier[] glaciers;
     public Glacier activeGlacier;
     private GameObject glacierGameObject;
+    [SerializeField] private MeshFilter glacierbed;
 
     [SerializeField] public bool simulateGpsLocation;
     [SerializeField] public GpsData simulatedGpsLocation;
@@ -270,7 +271,7 @@ public class GPS : MonoBehaviour
 
     private void OnHeightDataReady(AsciiHeightData heightData)
     {
-        StartCoroutine(TerrainDataLoader.CreateTerrainDataFromAsciiGridCoroutine(heightData, OnTerrainDataReady));
+        StartCoroutine(TerrainDataLoader.CreateTerrainDataFromAsciiGridCoroutine(heightData, OnTerrainDataReady));//, glacierbed.mesh));
     }
 
     void OnTerrainDataReady(TerrainData terrainData)
