@@ -55,6 +55,8 @@ public class GPS : MonoBehaviour
     private GameObject glacierGameObject;
     [SerializeField] private MeshFilter glacierbed;
 
+    private GlacierObject glacierObject;
+
     [SerializeField] public bool simulateGpsLocation;
     [SerializeField] public GpsData simulatedGpsLocation;
 
@@ -173,7 +175,7 @@ public class GPS : MonoBehaviour
             {
                 StartCoroutine(AdjustHeading());
 
-                StartCoroutine(GetTerrainData(TerrainCreation));
+                //StartCoroutine(GetTerrainData(TerrainCreation));
 
                 //Instantiate Glacier
                 glacierGameObject = Instantiate(activeGlacier.fbxModel, glacier);
@@ -182,6 +184,21 @@ public class GPS : MonoBehaviour
                 glacierGameObject.transform.localScale = new Vector3(activeGlacier.scaling.x, activeGlacier.scaling.y, activeGlacier.scaling.z);
                 glacierGameObject.transform.rotation = Quaternion.Euler(activeGlacier.rotation.x, activeGlacier.rotation.y, activeGlacier.rotation.z);
 
+                glacierObject = glacierGameObject.GetComponent<GlacierObject>();
+                if (glacierObject)
+                {
+                    sceneSelector.glaciARSlider.minValue = 0;
+                    sceneSelector.glaciARSlider.maxValue = glacierObject.glacierStates.Length - 1;
+                    sceneSelector.glaciARSlider.onValueChanged.AddListener((value) => {
+                        glacierObject.SetGlacier(Mathf.RoundToInt(value));
+                    });
+                } else
+                {
+                    throw new Exception("No glacierObject found.");
+                    // Set back to Menu
+                }
+
+                sceneSelector.LoadingDoneUI(); 
             }
             else
             {
@@ -189,6 +206,18 @@ public class GPS : MonoBehaviour
                 // Give feedback to the user to choose which glacier to simulate
             }
         }));
+
+        if (!simulateGpsLocation)
+        {
+            // Set Player Position on the terrain
+            Vector2 playerPosition = CoordinateConverter.calculateRelativePositionEquirectangular2D(activeGlacier.centerPosition, currentGpsLocation);
+            world.position = new Vector3((float)(playerPosition.x), world.position.y, playerPosition.y);
+
+            world.position = CalculatePositionOnTerrain(world);
+            world.position = new Vector3(world.position.x, world.position.y - unityTerrainParent.position.y - CalculatePositionOnTerrain(xrOrigin.transform).y - cameraHeightOffset, world.position.z);
+        }
+
+        sceneSelector.LoadingDoneUI();
     }
 
     private IEnumerator GetGPSPosition(Action onComplete)
@@ -264,11 +293,12 @@ public class GPS : MonoBehaviour
         loadingManager.SetHeadingProgress(100);
     }
 
+    /*
     private void TerrainCreation(string[] result)
     {
         StartCoroutine(TerrainDataLoader.GetHeightsFromAsciiGrid(result, heightModel, OnHeightDataReady));
     }
-
+    
     private void OnHeightDataReady(AsciiHeightData heightData)
     {
         StartCoroutine(TerrainDataLoader.CreateTerrainDataFromAsciiGridCoroutine(heightData, OnTerrainDataReady));//, glacierbed.mesh));
@@ -308,7 +338,7 @@ public class GPS : MonoBehaviour
         glacier.position = CalculatePositionOnTerrain(glacier);
         glacier.position = new Vector3(glacier.position.x, glacier.position.y + unityTerrainParent.position.y, glacier.position.z);
         */
-
+    /*
         if (!simulateGpsLocation)
         {
             // Set Player Position on the terrain
@@ -321,8 +351,7 @@ public class GPS : MonoBehaviour
         
         sceneSelector.LoadingDoneUI();
     }
-
-
+    */
     /// <summary>
     /// Calculates the Position on the Terrain.
     /// </summary>
@@ -340,6 +369,7 @@ public class GPS : MonoBehaviour
     #endregion
 
     #region ASYNC Methods
+    /*
     /// <summary>
     /// Gets the TerrainData from TerrainDataLoader.
     /// </summary>
@@ -362,13 +392,8 @@ public class GPS : MonoBehaviour
 
         double latDegreeDistance = range / 111000.0; // Convert range to latitude degrees
         double lonDegreeDistance = range / (Math.Cos(currentGpsLocation.lat * Math.PI / 180) * 111000.0); // Convert range to longitude degrees
-        */
+        *//*
         yield return TerrainDataLoader.GetTerrainData(
-            /*
-        currentGpsLocation.lat + latDegreeDistance,
-        currentGpsLocation.lat - latDegreeDistance,
-        currentGpsLocation.lon - lonDegreeDistance,
-        currentGpsLocation.lon + lonDegreeDistance,*/
         activeGlacier.north,
         activeGlacier.south,
         activeGlacier.west,
@@ -381,6 +406,6 @@ public class GPS : MonoBehaviour
             callback(fileArray); // Call the callback with the fetched data
         });
     }
-
+    */
     #endregion
 }
