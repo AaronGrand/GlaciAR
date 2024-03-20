@@ -24,9 +24,10 @@ MonoBehaviour:
   west: 7.80429697117454
   east: 8.23601742882546
   meshRangeInMeters: 33000
-  fbxModel: {fileID: 5651081658015688969, guid: 1caf6d4b22350a6449e32734a8de9b02,
-    type: 3}
+  glacier: {fileID: 5651081658015688969, guid: 1caf6d4b22350a6449e32734a8de9b02, type: 3}
   position: {x: 0, y: 0, z: 0}
   rotation: {x: 0, y: 0, z: 0}
   scaling: {x: 1, y: 1, z: 1}
+  terrain: {fileID: 0}
+  glacierBed: {fileID: 0}
   scalingFactor: 0.688545688545689

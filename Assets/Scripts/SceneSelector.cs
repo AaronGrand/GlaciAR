@@ -18,6 +18,13 @@ public class SceneSelector : MonoBehaviour
         startScreen.SetActive(true);
     }
 
+    public void Menu()
+    {
+        loadingScreen.SetActive(false);
+        glaciARUI.SetActive(false);
+        startScreen.SetActive(true);
+    }
+
     public void OnLoad(bool simulateGPS)
     {
         /*if (index == 0)

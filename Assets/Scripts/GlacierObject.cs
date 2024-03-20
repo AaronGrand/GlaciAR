@@ -7,6 +7,9 @@ public class GlacierObject : MonoBehaviour
     public GameObject[] glacierStates;
     public int activeGlacierIndex;
 
+    public GameObject glacierBed;
+    public GameObject terrain;
+
     public void SetAllActive(bool active)
     {
         foreach(GameObject glacier in glacierStates)
