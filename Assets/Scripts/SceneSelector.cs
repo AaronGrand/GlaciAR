@@ -1,40 +1,45 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
 
 public class SceneSelector : MonoBehaviour
 {
-    [SerializeField] private GameObject loadingScreen;
-    [SerializeField] private GameObject startScreen;
-    public GameObject glaciARUI;
+    [SerializeField] private GameObject UI_glacierSelection;
+    [SerializeField] private GameObject UI_simulationSelection;
+    [SerializeField] private GameObject UI_loadingScreen;
+    public GameObject UI_glaciAR;
     public Slider glaciARSlider;
+    public TextMeshProUGUI glaciARSliderText;
 
     private void Start()
     {
-        loadingScreen.SetActive(false);
-        glaciARUI.SetActive(false);
-        startScreen.SetActive(true);
+        OnMenuClicked();
     }
 
-    public void Menu()
+    public void OnMenuClicked()
     {
-        loadingScreen.SetActive(false);
-        glaciARUI.SetActive(false);
-        startScreen.SetActive(true);
+        UI_glacierSelection.SetActive(true);
+        UI_simulationSelection.SetActive(false);
+        UI_loadingScreen.SetActive(false);
+        UI_glaciAR.SetActive(false);
+
+        // Destroy all temp Elements
+        GPS.Instance.ResetGlacier();
     }
 
-    public void OnLoad(bool simulateGPS)
+    public void OnGlacierSelect(int index)
     {
-        /*if (index == 0)
-        {
-            GPS.Instance.enabled = false;
-        } else
-        {
-            GPS.Instance.enabled = true;
-        }*/
+        GPS.Instance.activeGlacier = GPS.Instance.glaciers[index];
 
+        UI_simulationSelection.SetActive(true);
+
+        UI_glacierSelection.SetActive(false);
+        UI_loadingScreen.SetActive(false);
+        UI_glaciAR.SetActive(false);
+    }
+
+    public void OnSimulationSelect(bool simulateGPS)
+    {
         GPS.Instance.loadingManager.ResetProgress();
         LoadGlacierUI();
 
@@ -43,17 +48,24 @@ public class SceneSelector : MonoBehaviour
 
     private void LoadGlacierUI()
     {
-        loadingScreen.SetActive(true);
-        startScreen.SetActive(false);
-        //just to be sure
-        glaciARUI.SetActive(false);
+        UI_loadingScreen.SetActive(true);
+
+        UI_glacierSelection.SetActive(false);
+        UI_simulationSelection.SetActive(false);
+        UI_glaciAR.SetActive(false);
     }
 
     public void LoadingDoneUI()
     {
-        loadingScreen.SetActive(false);
-        startScreen.SetActive(false);
-        glaciARUI.SetActive(true);
+        UI_glaciAR.SetActive(true);
+
+        UI_glacierSelection.SetActive(false);
+        UI_simulationSelection.SetActive(false);
+        UI_loadingScreen.SetActive(false);
     }
 
+    public void OnChangeGlacier(string year)
+    {
+        glaciARSliderText.text = year;
+    }
 }

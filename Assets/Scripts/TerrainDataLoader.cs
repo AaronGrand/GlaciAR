@@ -114,7 +114,7 @@ public class TerrainDataLoader
         AsciiHeightData data = new AsciiHeightData
         {
             heights = heights,
-            colScalingFactor = GPS.Instance.activeGlacier.scalingFactor,
+            //colScalingFactor = GPS.Instance.activeGlacier.scalingFactor,
             gridSizeInMeter = gridSizeInMeter,
             nrows = nrows,
             ncols = ncols

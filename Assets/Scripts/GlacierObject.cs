@@ -22,5 +22,6 @@ public class GlacierObject : MonoBehaviour
     {
         SetAllActive(false);
         glacierStates[index].SetActive(true);
+        GPS.Instance.sceneSelector.OnChangeGlacier(glacierStates[index].name.Substring(2, 4));
     }
 }
