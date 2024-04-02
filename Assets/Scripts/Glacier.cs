@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 [CreateAssetMenu(fileName = "New Glacier", menuName = "Glaciers/Glacier")]
 public class Glacier : ScriptableObject
@@ -15,5 +16,5 @@ public class Glacier : ScriptableObject
     public double east;
 
     public int meshRangeInMeters;
-    public GameObject glacier;
+    public AssetReference glacier;
 }

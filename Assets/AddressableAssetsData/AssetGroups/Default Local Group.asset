@@ -16,12 +16,7 @@ MonoBehaviour:
   m_Data:
     m_SerializedData: []
   m_GUID: af087e62861bbc04ab90f6f80276ac8e
-  m_SerializeEntries:
-  - m_GUID: 1c53789eb65609b448d4499fe46ff9d6
-    m_Address: Assets/Glaciers/AletschGletscher/AletschGletscher.asset
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 1bb511b0180368a4b96173c23d0894f9, type: 2}
   m_SchemaSet:

@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: RemotePrefabs
+  m_EditorClassIdentifier: 
+  m_GroupName: RemotePrefabs
+  m_Data:
+    m_SerializedData: []
+  m_GUID: b93e8c1ddc4e20e4298122d3c9f58217
+  m_SerializeEntries:
+  - m_GUID: 1c53789eb65609b448d4499fe46ff9d6
+    m_Address: Assets/Glaciers/AletschGletscher/AletschGletscher.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8d49403e71d79cf4d8d72523b59a3a2c
+    m_Address: Assets/Models
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1caf6d4b22350a6449e32734a8de9b02
+    m_Address: Assets/Glaciers/AletschGletscher/AletschGletscher.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2026361b589ff964d817099b9579787d
+    m_Address: Assets/Models/AletschGletscher
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 090772575466d0f45a1d9d25bb5a4503
+    m_Address: Assets/Models/AletschGletscher/AletschGletscher_Terrain.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ae9e4ea55485dab47a7bf4341c380432
+    m_Address: Assets/Models/AletschGletscher/AletschGletscher_Bed.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c57eb59182ebdcb47902b1af8afe9ecf
+    m_Address: Assets/Models/AletschGletscher/AletschGletscher.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 31321ba15b8f8eb4c954353edc038b1d
+    m_Address: Packages/com.unity.render-pipelines.universal/Runtime/Materials/Lit.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 1bb511b0180368a4b96173c23d0894f9, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: f7db89deee7b1c644861f55efc3b15c5, type: 2}
+    - {fileID: 11400000, guid: 35efb665b8f50b34c9e123bca3d2ad80, type: 2}

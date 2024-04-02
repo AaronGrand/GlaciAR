@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using Unity.XR.CoreUtils;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 /// <summary>
 /// The Main Class of the Tool.
@@ -171,50 +173,76 @@ public class GPS : MonoBehaviour
             if (!hasException)
             {
                 // Instantiate Glacier
-                glacierGameObject = Instantiate(activeGlacier.glacier, glacier);
+                //glacierGameObject = Instantiate(activeGlacier.glacier, glacier);
+
+                Addressables.InstantiateAsync(activeGlacier.glacier).Completed += handle => {
+                    if (handle.Status == AsyncOperationStatus.Succeeded)
+                    {
+                        // The asset is now instantiated.
+                        // You can access the instantiated GameObject with handle.Result
+                        GameObject glacierGameObject = handle.Result;
+
+                        // Perform your actions with glacierObject here
+
+                        glacierObject = glacierGameObject.GetComponent<GlacierObject>();
+                        if (glacierObject)
+                        {
+                            sceneSelector.glaciARSlider.minValue = 0;
+                            // reset
+                            sceneSelector.glaciARSlider.value = 0;
+                            glacierObject.SetGlacier(0);
+
+                            sceneSelector.glaciARSlider.maxValue = glacierObject.glacierStates.Length - 1;
+                            sceneSelector.glaciARSlider.onValueChanged.AddListener((value) => {
+                                // Set text of Slider and change glacier state
+                                glacierObject.SetGlacier(Mathf.RoundToInt(value));
+                            });
+
+                            // Set Material to simulationMaterial
+                            if (simulateGPS)
+                            {
+                                glacierObject.terrain.GetComponent<Renderer>().material = mat_simulation;
+                                // Set Material to seeThrough
+                            }
+                            else
+                            {
+                                glacierObject.terrain.GetComponent<Renderer>().material = mat_seeThrough;
+                            }
+
+                        }
+                        else
+                        {
+                            hasException = true;
+
+                            throw new Exception("No glacierObject found.");
+                            // Set back to Menu
+                        }
+
+                        if (!hasException)
+                        {
+                            sceneSelector.LoadingDoneUI();
+                        }
+                    }
+                    else
+                    {
+                        // Handle the case where instantiation failed
+                        Debug.LogError("Asset instantiation failed.");
+                    }
+                };
+
                 // Get all Transforms
                 //glacierGameObject.transform.position = new Vector3(activeGlacier.position.x, activeGlacier.position.y, activeGlacier.position.z);
                 //glacierGameObject.transform.localScale = new Vector3(activeGlacier.scaling.x, activeGlacier.scaling.y, activeGlacier.scaling.z);
                 //glacierGameObject.transform.rotation = Quaternion.Euler(activeGlacier.rotation.x, activeGlacier.rotation.y, activeGlacier.rotation.z);
 
-                glacierObject = glacierGameObject.GetComponent<GlacierObject>();
-                if (glacierObject)
-                {
-                    sceneSelector.glaciARSlider.minValue = 0;
-                    // reset
-                    sceneSelector.glaciARSlider.value = 0;
-                    glacierObject.SetGlacier(0);
 
-                    sceneSelector.glaciARSlider.maxValue = glacierObject.glacierStates.Length - 1;
-                    sceneSelector.glaciARSlider.onValueChanged.AddListener((value) => {
-                        // Set text of Slider and change glacier state
-                        glacierObject.SetGlacier(Mathf.RoundToInt(value));
-                    });
-
-                    // Set Material to simulationMaterial
-                    if (simulateGPS)
-                    {
-                        glacierObject.terrain.GetComponent<Renderer>().material = mat_simulation;
-                        // Set Material to seeThrough
-                    } else
-                    {
-                        glacierObject.terrain.GetComponent<Renderer>().material = mat_seeThrough;
-                    }
-
-                }
-                else
-                {
-                    hasException = true;
-
-                    throw new Exception("No glacierObject found.");
-                    // Set back to Menu
-                }
             }
 
             if (!hasException)
             {
                 sceneSelector.LoadingDoneUI();
             }
+
 
         } catch (Exception e)
         {
