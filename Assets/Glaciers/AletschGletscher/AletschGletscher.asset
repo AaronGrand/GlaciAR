@@ -28,4 +28,7 @@ MonoBehaviour:
     m_AssetGUID: 1caf6d4b22350a6449e32734a8de9b02
     m_SubObjectName: 
     m_SubObjectType: 
-    m_EditorAssetChanged: 0
+    m_EditorAssetChanged: 1
+  mat_terrain: {fileID: 2100000, guid: c20eb786443293041ac62b201d519dd4, type: 2}
+  mat_glacierBed: {fileID: 2100000, guid: 8605f58ff1b11404590baf7834fd9aeb, type: 2}
+  mat_glacier: {fileID: 2100000, guid: c20eb786443293041ac62b201d519dd4, type: 2}

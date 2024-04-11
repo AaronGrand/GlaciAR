@@ -3,7 +3,12 @@ guid: c57eb59182ebdcb47902b1af8afe9ecf
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Aletschgletscher
+    second: {fileID: 2100000, guid: c20eb786443293041ac62b201d519dd4, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

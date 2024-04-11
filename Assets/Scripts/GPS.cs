@@ -30,13 +30,16 @@ public class GPS : MonoBehaviour
     
     [SerializeField] private Transform world;
 
+    [SerializeField] private Vector3 simulatePosition;
+
     [Header("Terrain")]
-    [SerializeField] private Material terrainMaterial;
+    private Material terrainMaterial;
+    [SerializeField] private LayerMask terrainLayer;
 
     // Use for Terrain Generation after mesh download
     [Header("Terrain Generation")]
-    [SerializeField] public Transform unityTerrainParent;
-    [SerializeField] private Terrain terrain;
+    //[SerializeField] public Transform unityTerrainParent;
+    //[SerializeField] private Terrain terrain;
     //[SerializeField] private TerrainCollider terrainCollider;
 
     //private MeshFilter meshFilter;
@@ -44,11 +47,11 @@ public class GPS : MonoBehaviour
     [Header("Glaciers")]
     [SerializeField] public Glacier[] glaciers;
     public Glacier activeGlacier;
-    private GameObject glacierGameObject;
+    public GameObject glacierGameObject;
     //[SerializeField] private MeshFilter glacierbed;
 
     [SerializeField] private Material mat_seeThrough;
-    [SerializeField] private Material mat_simulation;
+    //[SerializeField] private Material mat_simulation;
 
     private GlacierObject glacierObject;
 
@@ -113,11 +116,11 @@ public class GPS : MonoBehaviour
     {
         bool hasException = false;
 
+        cameraOffset.transform.position = Vector3.zero;
+        world.position = Vector3.zero;
+
         try
         {
-            // Reset parameters
-            world.position = Vector3.zero;
-            glacier.position = Vector3.zero;
 
             // Simulated GPS Position (Not on site)
             if (simulateGPS)
@@ -125,18 +128,27 @@ public class GPS : MonoBehaviour
                 currentGpsLocation = activeGlacier.centerPosition;
 
                 // TODO: Set player position for simulation
-
+                cameraOffset.transform.position = simulatePosition;
 
                 // Get GPS Position
             }
             else
             {
+
                 // Reset parameters
                 bool foundActiveGlacier = false;
 
                 // Get GPS Position
                 {
+                    loadingManager.SetHeadingProgress(0);
+                    loadingManager.SetText("Adjusting rotation");
                     StartCoroutine(AdjustHeading());
+
+                    loadingManager.SetHeadingProgress(100);
+
+
+                    loadingManager.SetGPSProgress(0);
+                    loadingManager.SetText("Get GPS Position");
 
                     StartCoroutine(GetGPSPosition(() => {
                         try
@@ -155,11 +167,21 @@ public class GPS : MonoBehaviour
                             else
                             {
                                 // Set Player Position on the terrain
-                                Vector2 playerPosition = CoordinateConverter.calculateRelativePositionEquirectangular2D(activeGlacier.centerPosition, currentGpsLocation);
+                                /*Vector2 playerPosition = CoordinateConverter.calculateRelativePositionEquirectangular2D(activeGlacier.centerPosition, currentGpsLocation);
                                 world.position = new Vector3((float)(playerPosition.x), world.position.y, playerPosition.y);
 
                                 world.position = CalculatePositionOnTerrain(world);
-                                world.position = new Vector3(world.position.x, world.position.y - unityTerrainParent.position.y - CalculatePositionOnTerrain(xrOrigin.transform).y - cameraHeightOffset, world.position.z);
+                                world.position = new Vector3(world.position.x, world.position.y - unityTerrainParent.position.y - CalculatePositionOnMesh(xrOrigin.transform).y - cameraHeightOffset, world.position.z);
+                                */
+                                Debug.Log(currentGpsLocation.lat + " " + currentGpsLocation.lon);
+                                Vector2 glacierUnityLocation = CoordinateConverter.calculateRelativePositionEquirectangular2D(activeGlacier.centerPosition, currentGpsLocation);
+                                cameraOffset.transform.position = new Vector3((float)(glacierUnityLocation.x), world.position.y, (float)(glacierUnityLocation.y));
+
+                                
+
+                                //world.position = CalculatePositionOnMesh(world);
+                                //glacier.position = new Vector3(glacier.position.x, glacier.position.y, glacier.position.z);
+
                             }
                         } catch (Exception e)
                         {
@@ -170,6 +192,11 @@ public class GPS : MonoBehaviour
                 }
             }
 
+            loadingManager.SetGPSProgress(100);
+
+            loadingManager.SetTerrainDataProgress(0);
+            loadingManager.SetText("Load Terrain Data");
+
             if (!hasException)
             {
                 // Instantiate Glacier
@@ -178,9 +205,12 @@ public class GPS : MonoBehaviour
                 Addressables.InstantiateAsync(activeGlacier.glacier).Completed += handle => {
                     if (handle.Status == AsyncOperationStatus.Succeeded)
                     {
-                        // The asset is now instantiated.
-                        // You can access the instantiated GameObject with handle.Result
-                        GameObject glacierGameObject = handle.Result;
+                        // Asset is now instantiated.
+                        glacierGameObject = handle.Result;
+
+                        // Set parent
+                        glacierGameObject.transform.parent = world;
+                        glacierGameObject.transform.position = world.transform.position;
 
                         // Perform your actions with glacierObject here
 
@@ -198,16 +228,22 @@ public class GPS : MonoBehaviour
                                 glacierObject.SetGlacier(Mathf.RoundToInt(value));
                             });
 
+                            loadingManager.SetTerrainDataProgress(50);
+                            loadingManager.SetText("Set Textures");
+
                             // Set Material to simulationMaterial
                             if (simulateGPS)
                             {
-                                glacierObject.terrain.GetComponent<Renderer>().material = mat_simulation;
-                                // Set Material to seeThrough
+                                glacierObject.terrain.GetComponent<Renderer>().material = activeGlacier.mat_terrain;
                             }
                             else
                             {
                                 glacierObject.terrain.GetComponent<Renderer>().material = mat_seeThrough;
+                                Debug.Log("Set material");
                             }
+
+                            glacierObject.glacierBed.GetComponent<Renderer>().material = activeGlacier.mat_glacierBed;
+                            glacierObject.SetMaterial(activeGlacier.mat_glacier);
 
                         }
                         else
@@ -227,22 +263,29 @@ public class GPS : MonoBehaviour
                     {
                         // Handle the case where instantiation failed
                         Debug.LogError("Asset instantiation failed.");
+                        hasException = true;
+                    }
+
+                    // position glacier in x and y
+                    //glacierGameObject.transform.position = -world.transform.position;
+
+                    //change height of glacierObject
+                    //glacierObject.transform.position = new Vector3(glacierObject.transform.position.x, CalculatePositionOnTerrain(this.transform).y, glacierObject.transform.position.z);
+
+                    if (!simulateGPS)
+                    {
+                        cameraOffset.transform.position = new Vector3(cameraOffset.transform.position.x, CalculatePositionOnMesh(cameraOffset.transform).y + cameraHeightOffset, cameraOffset.transform.position.z);
+                    }
+
+                    if (!hasException)
+                    {
+                        sceneSelector.LoadingDoneUI();
                     }
                 };
-
-                // Get all Transforms
-                //glacierGameObject.transform.position = new Vector3(activeGlacier.position.x, activeGlacier.position.y, activeGlacier.position.z);
-                //glacierGameObject.transform.localScale = new Vector3(activeGlacier.scaling.x, activeGlacier.scaling.y, activeGlacier.scaling.z);
-                //glacierGameObject.transform.rotation = Quaternion.Euler(activeGlacier.rotation.x, activeGlacier.rotation.y, activeGlacier.rotation.z);
-
+                //TODO
+                // Set player position on mesh
 
             }
-
-            if (!hasException)
-            {
-                sceneSelector.LoadingDoneUI();
-            }
-
 
         } catch (Exception e)
         {
@@ -258,6 +301,7 @@ public class GPS : MonoBehaviour
     private void LoadingException(Exception e)
     {
         Console.WriteLine($"Caught an exception: {e.Message}");
+        ResetGlacier();
         sceneSelector.OnMenuClicked();
     }
 
@@ -338,7 +382,7 @@ public class GPS : MonoBehaviour
     /// <summary>
     /// Calculates the Position on the Terrain.
     /// </summary>
-    public Vector3 CalculatePositionOnTerrain(Transform t, float heightOffset = 0f)
+    /*public Vector3 CalculatePositionOnTerrain(Transform t, float heightOffset = 0f)
     {
         float terrainHeight = terrain.SampleHeight(t.position);
 
@@ -347,11 +391,41 @@ public class GPS : MonoBehaviour
         Debug.Log("Terrain Position: " + t.name + " " + positionOnTerrain);
 
         return positionOnTerrain;
+    }*/
+
+    /// <summary>
+    /// Calculates the Position on a Mesh (with MeshCollider).
+    /// </summary>
+    public Vector3 CalculatePositionOnMesh(Transform t, float heightOffset = 0f)
+    {
+        Vector3 pos = new Vector3(t.position.x, t.position.y + 50000f, t.position.z);
+
+        Debug.Log("Ray: " + t.name.ToString() + " " + pos.ToString());
+
+        int layer = terrainLayer;
+        RaycastHit ray;
+        if (Physics.Raycast(pos, Vector3.down, out ray, 100000, layer))
+        {
+            Debug.DrawRay(pos, t.TransformDirection(Vector3.down) * ray.distance, Color.yellow, 100000f);
+            Debug.Log("RAY DOWN HIT");
+        }
+        else
+        {
+            Physics.Raycast(pos, Vector3.up, out ray, 100000, layer);
+            Debug.DrawRay(pos, t.TransformDirection(Vector3.up) * ray.distance, Color.yellow, 100000f);
+            Debug.Log("RAY UP HIT");
+        }
+
+        Debug.Log("RayDistance: " + t.name.ToString() + " " + ray.distance);
+
+        Vector3 temp = ray.point;
+        Debug.Log("Temp: " + temp.ToString());
+        return new Vector3(temp.x, temp.y + heightOffset, temp.z);
     }
 
     #endregion
 
     #region ASYNC Methods
-    
+
     #endregion
 }

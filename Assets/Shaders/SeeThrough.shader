@@ -1,4 +1,4 @@
-Shader "Custom/SeeThroughWithDepthMask"
+Shader "Custom/SeeThrough"
 {
     SubShader{
             Tags {"Queue" = "Geometry-10" }

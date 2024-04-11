@@ -3,7 +3,12 @@ guid: ae9e4ea55485dab47a7bf4341c380432
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GlacierBed
+    second: {fileID: 2100000, guid: 8605f58ff1b11404590baf7834fd9aeb, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

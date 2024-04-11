@@ -17,4 +17,8 @@ public class Glacier : ScriptableObject
 
     public int meshRangeInMeters;
     public AssetReference glacier;
+    
+    public Material mat_terrain;
+    public Material mat_glacierBed;
+    public Material mat_glacier;
 }

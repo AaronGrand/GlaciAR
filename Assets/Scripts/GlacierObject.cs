@@ -24,4 +24,12 @@ public class GlacierObject : MonoBehaviour
         glacierStates[index].SetActive(true);
         GPS.Instance.sceneSelector.OnChangeGlacier(glacierStates[index].name.Substring(2, 4));
     }
+
+    public void SetMaterial(Material glacierMaterial)
+    {
+        foreach (GameObject glacier in glacierStates)
+        {
+            glacier.GetComponent<Renderer>().material = glacierMaterial;
+        }
+    }
 }

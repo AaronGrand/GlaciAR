@@ -32,28 +32,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2026361b589ff964d817099b9579787d
-    m_Address: Assets/Models/AletschGletscher
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 090772575466d0f45a1d9d25bb5a4503
-    m_Address: Assets/Models/AletschGletscher/AletschGletscher_Terrain.fbx
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ae9e4ea55485dab47a7bf4341c380432
-    m_Address: Assets/Models/AletschGletscher/AletschGletscher_Bed.fbx
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c57eb59182ebdcb47902b1af8afe9ecf
-    m_Address: Assets/Models/AletschGletscher/AletschGletscher.fbx
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 31321ba15b8f8eb4c954353edc038b1d
     m_Address: Packages/com.unity.render-pipelines.universal/Runtime/Materials/Lit.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 57406f4dcea55ea45821641aeb83a502
+    m_Address: Assets/Materials/Terrain.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dc04faae854084a4384b5ef49f686794
+    m_Address: Assets/Materials/SeeThrough.mat
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
