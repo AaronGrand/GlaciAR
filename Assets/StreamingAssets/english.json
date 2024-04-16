@@ -1,0 +1,11 @@
+{
+    "items": [
+        {"key": "heading_progress_0", "value": "Start Compass"},
+        {"key": "gps_progress_0", "value": "Start GPS"},
+        {"key": "load_terrain_progress_0", "value": "Load Terrain"},
+        {"key": "textures_progress_0", "value": "Load Textures"},
+        {"key": "on_site", "value": "I am on site."},
+        {"key": "on_simulation", "value": "I am not on site."},
+        {"key": "menu", "value": "Menu"}
+    ]
+}

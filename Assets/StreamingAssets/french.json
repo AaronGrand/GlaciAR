@@ -1,0 +1,11 @@
+{
+    "items": [
+        {"key": "heading_progress_0", "value": "Démarrer le compas"},
+        {"key": "gps_progress_0", "value": "Démarrer le GPS"},
+        {"key": "load_terrain_progress_0", "value": "Charger le terrain"},
+        {"key": "textures_progress_0", "value": "Charger les textures"},
+        {"key": "on_site", "value": "Je suis sur place."},
+        {"key": "on_simulation", "value": "Je ne suis pas sur place."},
+        {"key": "menu", "value": "Menu"}
+    ]
+}
