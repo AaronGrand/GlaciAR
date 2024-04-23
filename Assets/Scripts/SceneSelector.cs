@@ -10,6 +10,7 @@ public class SceneSelector : MonoBehaviour
     [SerializeField] private GameObject UI_simulationSelection;
     [SerializeField] private GameObject UI_loadingScreen;
     [SerializeField] private GameObject UI_hamburger;
+    [SerializeField] private GameObject UI_startScreen;
     public GameObject UI_glaciAR;
     public Slider glaciARSlider;
     public TextMeshProUGUI glaciARSliderText;
@@ -17,6 +18,8 @@ public class SceneSelector : MonoBehaviour
     private void Start()
     {
         LanguageTextManager.LoadLocalizedText("german.json");
+
+        UI_startScreen.SetActive(false);
 
         OnMenuClicked();
     }

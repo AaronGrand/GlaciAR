@@ -3,6 +3,7 @@ using System.Collections;
 using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.Android;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 /// <summary>
@@ -80,25 +81,29 @@ public class GPS : MonoBehaviour
 
     private void Start()
     {
+        started = false;
         xrOrigin = origin.GetComponent<XROrigin>();
     }
 
     private void Update()
     {
-        /*
+        
         if (started)
         {
+            Debug.Log("started true");
             if (Input.touchCount > 0)
             {
+                Debug.Log("touch count > 0");
                 Touch touch = Input.GetTouch(0);
 
                 if (touch.phase == TouchPhase.Moved)
                 {
-                    float rotationAmount = touch.deltaPosition.x * -0.1f;
+                    Debug.Log("Moved true");
+                    float rotationAmount = touch.deltaPosition.x * -0.05f;
                     cameraOffset.transform.Rotate(0, rotationAmount, 0);
                 }
             }
-        }*/
+        }
     }
 
     #endregion
@@ -114,6 +119,19 @@ public class GPS : MonoBehaviour
         activeGlacier = glaciers[index];
     }
 
+    public void RequestPermissions()
+    {
+        if (!Permission.HasUserAuthorizedPermission(Permission.Camera))
+        {
+            Permission.RequestUserPermission(Permission.Camera);
+        }
+
+        if (!Input.location.isEnabledByUser)
+        {
+            Permission.RequestUserPermission(Permission.FineLocation);
+        }
+    }
+
     /// <summary>
     /// After Deciding what Glacier to display, we need to set the GPS Position. In simulation, but also in real GPS Reading.
     /// </summary>
@@ -127,6 +145,8 @@ public class GPS : MonoBehaviour
         outline = true;
         pointOfInterestObject.gameObject.SetActive(true);
 
+        started = false;
+
         try
         {
 
@@ -139,6 +159,93 @@ public class GPS : MonoBehaviour
                 cameraOffset.transform.position = simulatePosition;
 
                 // Get GPS Position
+                {
+
+
+                    loadingManager.SetGPSProgress(100);
+
+                    loadingManager.SetTerrainDataProgress(0);
+                    loadingManager.SetText(LanguageTextManager.GetLocalizedValue("load_terrain_progress_0"));
+
+                    if (!hasException)
+                    {
+                        // Instantiate Glacier
+                        Addressables.InstantiateAsync(activeGlacier.glacier).Completed += handle => {
+                            if (handle.Status == AsyncOperationStatus.Succeeded)
+                            {
+                                // Asset is now instantiated.
+                                glacierGameObject = handle.Result;
+
+                                // Set parent
+                                glacierGameObject.transform.parent = world;
+                                glacierGameObject.transform.position = world.transform.position;
+
+                                // Perform actions with glacierObject here
+
+                                glacierObject = glacierGameObject.GetComponent<GlacierObject>();
+                                if (glacierObject)
+                                {
+                                    // reset
+                                    sceneSelector.glaciARSlider.minValue = 0;
+                                    sceneSelector.glaciARSlider.value = 0;
+                                    glacierObject.SetGlacier(0);
+
+                                    sceneSelector.glaciARSlider.maxValue = glacierObject.glacierStates.Length - 1;
+                                    sceneSelector.glaciARSlider.onValueChanged.AddListener((value) => {
+                                        // Set text of Slider and change glacier state
+                                        glacierObject.SetGlacier(Mathf.RoundToInt(value));
+                                    });
+
+                                    loadingManager.SetTerrainDataProgress(50);
+                                    loadingManager.SetText(LanguageTextManager.GetLocalizedValue("textures_progress_0"));
+
+                                    // Set Material to simulationMaterial
+                                    if (simulateGPS)
+                                    {
+                                        glacierObject.terrain.GetComponent<Renderer>().material = activeGlacier.mat_terrain;
+                                    }
+                                    else
+                                    {
+                                        glacierObject.terrain.GetComponent<Renderer>().material = mat_seeThrough;
+                                        Debug.Log("Set material");
+                                    }
+
+                                    glacierObject.glacierBed.GetComponent<Renderer>().material = activeGlacier.mat_glacierBed;
+                                    glacierObject.SetMaterial(activeGlacier.mat_glacier);
+
+                                }
+                                else
+                                {
+                                    hasException = true;
+
+                                    throw new Exception("No glacierObject found.");
+                                    // Set back to Menu
+                                }
+
+                                // Set Points Of Interest
+                                PointOfInterestManager.LoadLocalizedMountains(activeGlacier.pointOfInterestFileName, pointOfInterestObject);
+
+                            }
+                            else
+                            {
+                                // Handle the case where instantiation failed
+                                Debug.LogError("Asset instantiation failed.");
+                                hasException = true;
+                            }
+                            if (!simulateGPS)
+                            {
+                                cameraOffset.transform.position = new Vector3(cameraOffset.transform.position.x, CalculatePositionOnMesh(cameraOffset.transform.position).y + cameraHeightOffset, cameraOffset.transform.position.z);
+                            }
+
+                            // At this point everything loaded
+                            if (!hasException)
+                            {
+                                started = true;
+                                sceneSelector.LoadingDoneUI();
+                            }
+                        };
+                    }
+                }
             }
             else
             {
@@ -178,6 +285,93 @@ public class GPS : MonoBehaviour
                                 Vector2 glacierUnityLocation = CoordinateConverter.calculateRelativePositionEquirectangular2D(activeGlacier.centerPosition, currentGpsLocation);
                                 cameraOffset.transform.position = new Vector3((float)(glacierUnityLocation.x), world.position.y, (float)(glacierUnityLocation.y));
                             }
+
+
+
+                            loadingManager.SetGPSProgress(100);
+
+                            loadingManager.SetTerrainDataProgress(0);
+                            loadingManager.SetText(LanguageTextManager.GetLocalizedValue("load_terrain_progress_0"));
+
+                            if (!hasException)
+                            {
+                                // Instantiate Glacier
+                                Addressables.InstantiateAsync(activeGlacier.glacier).Completed += handle => {
+                                    if (handle.Status == AsyncOperationStatus.Succeeded)
+                                    {
+                                        // Asset is now instantiated.
+                                        glacierGameObject = handle.Result;
+
+                                        // Set parent
+                                        glacierGameObject.transform.parent = world;
+                                        glacierGameObject.transform.position = world.transform.position;
+
+                                        // Perform actions with glacierObject here
+
+                                        glacierObject = glacierGameObject.GetComponent<GlacierObject>();
+                                        if (glacierObject)
+                                        {
+                                            // reset
+                                            sceneSelector.glaciARSlider.minValue = 0;
+                                            sceneSelector.glaciARSlider.value = 0;
+                                            glacierObject.SetGlacier(0);
+
+                                            sceneSelector.glaciARSlider.maxValue = glacierObject.glacierStates.Length - 1;
+                                            sceneSelector.glaciARSlider.onValueChanged.AddListener((value) => {
+                                                // Set text of Slider and change glacier state
+                                                glacierObject.SetGlacier(Mathf.RoundToInt(value));
+                                            });
+
+                                            loadingManager.SetTerrainDataProgress(50);
+                                            loadingManager.SetText(LanguageTextManager.GetLocalizedValue("textures_progress_0"));
+
+                                            // Set Material to simulationMaterial
+                                            if (simulateGPS)
+                                            {
+                                                glacierObject.terrain.GetComponent<Renderer>().material = activeGlacier.mat_terrain;
+                                            }
+                                            else
+                                            {
+                                                glacierObject.terrain.GetComponent<Renderer>().material = mat_seeThrough;
+                                                Debug.Log("Set material");
+                                            }
+
+                                            glacierObject.glacierBed.GetComponent<Renderer>().material = activeGlacier.mat_glacierBed;
+                                            glacierObject.SetMaterial(activeGlacier.mat_glacier);
+
+                                        }
+                                        else
+                                        {
+                                            hasException = true;
+
+                                            throw new Exception("No glacierObject found.");
+                                            // Set back to Menu
+                                        }
+
+                                        // Set Points Of Interest
+                                        PointOfInterestManager.LoadLocalizedMountains(activeGlacier.pointOfInterestFileName, pointOfInterestObject);
+
+                                    }
+                                    else
+                                    {
+                                        // Handle the case where instantiation failed
+                                        Debug.LogError("Asset instantiation failed.");
+                                        hasException = true;
+                                    }
+                                    if (!simulateGPS)
+                                    {
+                                        cameraOffset.transform.position = new Vector3(cameraOffset.transform.position.x, CalculatePositionOnMesh(cameraOffset.transform.position).y + cameraHeightOffset, cameraOffset.transform.position.z);
+                                    }
+
+                                    // At this point everything loaded
+                                    if (!hasException)
+                                    {
+                                        started = true;
+                                        sceneSelector.LoadingDoneUI();
+                                    }
+                                };
+                            }
+
                         } catch (Exception e)
                         {
                             hasException = true;
@@ -185,88 +379,6 @@ public class GPS : MonoBehaviour
                         }
                     }));
                 }
-            }
-
-            loadingManager.SetGPSProgress(100);
-
-            loadingManager.SetTerrainDataProgress(0);
-            loadingManager.SetText(LanguageTextManager.GetLocalizedValue("load_terrain_progress_0"));
-
-            if (!hasException)
-            {
-                // Instantiate Glacier
-                Addressables.InstantiateAsync(activeGlacier.glacier).Completed += handle => {
-                    if (handle.Status == AsyncOperationStatus.Succeeded)
-                    {
-                        // Asset is now instantiated.
-                        glacierGameObject = handle.Result;
-
-                        // Set parent
-                        glacierGameObject.transform.parent = world;
-                        glacierGameObject.transform.position = world.transform.position;
-
-                        // Perform actions with glacierObject here
-
-                        glacierObject = glacierGameObject.GetComponent<GlacierObject>();
-                        if (glacierObject)
-                        {
-                            // reset
-                            sceneSelector.glaciARSlider.minValue = 0;
-                            sceneSelector.glaciARSlider.value = 0;
-                            glacierObject.SetGlacier(0);
-
-                            sceneSelector.glaciARSlider.maxValue = glacierObject.glacierStates.Length - 1;
-                            sceneSelector.glaciARSlider.onValueChanged.AddListener((value) => {
-                                // Set text of Slider and change glacier state
-                                glacierObject.SetGlacier(Mathf.RoundToInt(value));
-                            });
-
-                            loadingManager.SetTerrainDataProgress(50);
-                            loadingManager.SetText(LanguageTextManager.GetLocalizedValue("textures_progress_0"));
-
-                            // Set Material to simulationMaterial
-                            if (simulateGPS)
-                            {
-                                glacierObject.terrain.GetComponent<Renderer>().material = activeGlacier.mat_terrain;
-                            }
-                            else
-                            {
-                                glacierObject.terrain.GetComponent<Renderer>().material = mat_seeThrough;
-                                Debug.Log("Set material");
-                            }
-
-                            glacierObject.glacierBed.GetComponent<Renderer>().material = activeGlacier.mat_glacierBed;
-                            glacierObject.SetMaterial(activeGlacier.mat_glacier);
-
-                        }
-                        else
-                        {
-                            hasException = true;
-
-                            throw new Exception("No glacierObject found.");
-                            // Set back to Menu
-                        }
-
-                        // Set Points Of Interest
-                        PointOfInterestManager.LoadLocalizedMountains(activeGlacier.pointOfInterestFileName, pointOfInterestObject);
-
-                    }
-                    else
-                    {
-                        // Handle the case where instantiation failed
-                        Debug.LogError("Asset instantiation failed.");
-                        hasException = true;
-                    }
-                    if (!simulateGPS)
-                    {
-                        cameraOffset.transform.position = new Vector3(cameraOffset.transform.position.x, CalculatePositionOnMesh(cameraOffset.transform.position).y + cameraHeightOffset, cameraOffset.transform.position.z);
-                    }
-
-                    if (!hasException)
-                    {
-                        sceneSelector.LoadingDoneUI();
-                    }
-                };
             }
 
         } catch (Exception e)
@@ -299,6 +411,7 @@ public class GPS : MonoBehaviour
     {
         Console.WriteLine($"Caught an exception: {e.Message}");
         ResetGlacier();
+        RequestPermissions();
         sceneSelector.OnMenuClicked();
     }
 
@@ -316,6 +429,7 @@ public class GPS : MonoBehaviour
             if (!Input.location.isEnabledByUser)
             {
                 Debug.Log("Location not enabled on device or app does not have permission to access location");
+                Permission.RequestUserPermission(Permission.FineLocation);
             }
 
             // Starts the location service.
@@ -350,7 +464,6 @@ public class GPS : MonoBehaviour
 
     public IEnumerator AdjustHeading()
     {
-        started = false;
 
         // Enable the compass
         Input.compass.enabled = true;
@@ -365,8 +478,6 @@ public class GPS : MonoBehaviour
 
         //rotate Origin
         xrOrigin.MatchOriginUpCameraForward(Vector3.up, CoordinateConverter.HeadingToForwardVector(heading));
-
-        started = true;
 
         //loadingManager.SetText("Adjust Heading");
         //loadingManager.SetHeadingProgress(100);

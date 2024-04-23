@@ -6,6 +6,8 @@
         {"key": "textures_progress_0", "value": "Lade Texturen"},
         {"key": "on_site", "value": "Ich bin vor Ort."},
         {"key": "on_simulation", "value": "Ich bin nicht vor Ort."},
-        {"key": "menu", "value": "Menü"}
+        {"key": "menu", "value": "Menü"},
+        {"key": "mountain_names", "value": "Bergnamen"},
+        {"key": "outline", "value": "Umriss"}
     ]
 }

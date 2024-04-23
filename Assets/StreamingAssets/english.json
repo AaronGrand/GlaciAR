@@ -6,6 +6,9 @@
         {"key": "textures_progress_0", "value": "Load Textures"},
         {"key": "on_site", "value": "I am on site."},
         {"key": "on_simulation", "value": "I am not on site."},
-        {"key": "menu", "value": "Menu"}
+        {"key": "menu", "value": "menu"},
+        {"key": "mountain_names", "value": "mountainnames"},
+        {"key": "outline", "value": "outline"}
     ]
 }
+    
