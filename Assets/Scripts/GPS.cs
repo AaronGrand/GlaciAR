@@ -12,46 +12,41 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 [RequireComponent(typeof(XROrigin))]
 public class GPS : MonoBehaviour
 {
+
+    // Glacier Indizes
+    // Aletsch Gletscher:   00
+    // ...
+
     public static GPS Instance { set; get; }
 
     #region Class Variables
 
     private GpsData currentGpsLocation;
 
-    //[SerializeField] public GpsData active;
-
     [Header("AR Settings")]
     private XROrigin xrOrigin;
     [SerializeField] private GameObject cameraOffset;
     [SerializeField] private Transform origin;
-    [SerializeField] private Transform Camera;
+    [SerializeField] public Transform Camera;
     [SerializeField] private float cameraHeightOffset;
     [SerializeField] private Transform glacier;
+    [SerializeField] private Transform pointOfInterestObject;
     
     [SerializeField] private Transform world;
 
     [SerializeField] private Vector3 simulatePosition;
 
     [Header("Terrain")]
-    private Material terrainMaterial;
     [SerializeField] private LayerMask terrainLayer;
 
-    // Use for Terrain Generation after mesh download
-    [Header("Terrain Generation")]
-    //[SerializeField] public Transform unityTerrainParent;
-    //[SerializeField] private Terrain terrain;
-    //[SerializeField] private TerrainCollider terrainCollider;
-
-    //private MeshFilter meshFilter;
+    public bool outline = true;
 
     [Header("Glaciers")]
     [SerializeField] public Glacier[] glaciers;
     public Glacier activeGlacier;
     public GameObject glacierGameObject;
-    //[SerializeField] private MeshFilter glacierbed;
 
     [SerializeField] private Material mat_seeThrough;
-    //[SerializeField] private Material mat_simulation;
 
     private GlacierObject glacierObject;
 
@@ -109,6 +104,16 @@ public class GPS : MonoBehaviour
     #endregion
 
     #region Class Methods
+
+    public void SetGlacier(int index)
+    {
+        if (index >= glaciers.Length)
+        {
+            throw new IndexOutOfRangeException("No glacier with index " + index + " found!");
+        }
+        activeGlacier = glaciers[index];
+    }
+
     /// <summary>
     /// After Deciding what Glacier to display, we need to set the GPS Position. In simulation, but also in real GPS Reading.
     /// </summary>
@@ -118,6 +123,9 @@ public class GPS : MonoBehaviour
 
         cameraOffset.transform.position = Vector3.zero;
         world.position = Vector3.zero;
+
+        outline = true;
+        pointOfInterestObject.gameObject.SetActive(true);
 
         try
         {
@@ -141,14 +149,14 @@ public class GPS : MonoBehaviour
                 // Get GPS Position
                 {
                     loadingManager.SetHeadingProgress(0);
-                    loadingManager.SetText("Adjusting rotation");
+                    loadingManager.SetText(LanguageTextManager.GetLocalizedValue("heading_progress_0"));
                     StartCoroutine(AdjustHeading());
 
                     loadingManager.SetHeadingProgress(100);
 
-
+                     
                     loadingManager.SetGPSProgress(0);
-                    loadingManager.SetText("Get GPS Position");
+                    loadingManager.SetText(LanguageTextManager.GetLocalizedValue("gps_progress_0"));
 
                     StartCoroutine(GetGPSPosition(() => {
                         try
@@ -166,22 +174,9 @@ public class GPS : MonoBehaviour
                             }
                             else
                             {
-                                // Set Player Position on the terrain
-                                /*Vector2 playerPosition = CoordinateConverter.calculateRelativePositionEquirectangular2D(activeGlacier.centerPosition, currentGpsLocation);
-                                world.position = new Vector3((float)(playerPosition.x), world.position.y, playerPosition.y);
-
-                                world.position = CalculatePositionOnTerrain(world);
-                                world.position = new Vector3(world.position.x, world.position.y - unityTerrainParent.position.y - CalculatePositionOnMesh(xrOrigin.transform).y - cameraHeightOffset, world.position.z);
-                                */
                                 Debug.Log(currentGpsLocation.lat + " " + currentGpsLocation.lon);
                                 Vector2 glacierUnityLocation = CoordinateConverter.calculateRelativePositionEquirectangular2D(activeGlacier.centerPosition, currentGpsLocation);
                                 cameraOffset.transform.position = new Vector3((float)(glacierUnityLocation.x), world.position.y, (float)(glacierUnityLocation.y));
-
-                                
-
-                                //world.position = CalculatePositionOnMesh(world);
-                                //glacier.position = new Vector3(glacier.position.x, glacier.position.y, glacier.position.z);
-
                             }
                         } catch (Exception e)
                         {
@@ -195,13 +190,11 @@ public class GPS : MonoBehaviour
             loadingManager.SetGPSProgress(100);
 
             loadingManager.SetTerrainDataProgress(0);
-            loadingManager.SetText("Load Terrain Data");
+            loadingManager.SetText(LanguageTextManager.GetLocalizedValue("load_terrain_progress_0"));
 
             if (!hasException)
             {
                 // Instantiate Glacier
-                //glacierGameObject = Instantiate(activeGlacier.glacier, glacier);
-
                 Addressables.InstantiateAsync(activeGlacier.glacier).Completed += handle => {
                     if (handle.Status == AsyncOperationStatus.Succeeded)
                     {
@@ -212,13 +205,13 @@ public class GPS : MonoBehaviour
                         glacierGameObject.transform.parent = world;
                         glacierGameObject.transform.position = world.transform.position;
 
-                        // Perform your actions with glacierObject here
+                        // Perform actions with glacierObject here
 
                         glacierObject = glacierGameObject.GetComponent<GlacierObject>();
                         if (glacierObject)
                         {
-                            sceneSelector.glaciARSlider.minValue = 0;
                             // reset
+                            sceneSelector.glaciARSlider.minValue = 0;
                             sceneSelector.glaciARSlider.value = 0;
                             glacierObject.SetGlacier(0);
 
@@ -229,7 +222,7 @@ public class GPS : MonoBehaviour
                             });
 
                             loadingManager.SetTerrainDataProgress(50);
-                            loadingManager.SetText("Set Textures");
+                            loadingManager.SetText(LanguageTextManager.GetLocalizedValue("textures_progress_0"));
 
                             // Set Material to simulationMaterial
                             if (simulateGPS)
@@ -254,10 +247,9 @@ public class GPS : MonoBehaviour
                             // Set back to Menu
                         }
 
-                        if (!hasException)
-                        {
-                            sceneSelector.LoadingDoneUI();
-                        }
+                        // Set Points Of Interest
+                        PointOfInterestManager.LoadLocalizedMountains(activeGlacier.pointOfInterestFileName, pointOfInterestObject);
+
                     }
                     else
                     {
@@ -265,16 +257,9 @@ public class GPS : MonoBehaviour
                         Debug.LogError("Asset instantiation failed.");
                         hasException = true;
                     }
-
-                    // position glacier in x and y
-                    //glacierGameObject.transform.position = -world.transform.position;
-
-                    //change height of glacierObject
-                    //glacierObject.transform.position = new Vector3(glacierObject.transform.position.x, CalculatePositionOnTerrain(this.transform).y, glacierObject.transform.position.z);
-
                     if (!simulateGPS)
                     {
-                        cameraOffset.transform.position = new Vector3(cameraOffset.transform.position.x, CalculatePositionOnMesh(cameraOffset.transform).y + cameraHeightOffset, cameraOffset.transform.position.z);
+                        cameraOffset.transform.position = new Vector3(cameraOffset.transform.position.x, CalculatePositionOnMesh(cameraOffset.transform.position).y + cameraHeightOffset, cameraOffset.transform.position.z);
                     }
 
                     if (!hasException)
@@ -282,9 +267,6 @@ public class GPS : MonoBehaviour
                         sceneSelector.LoadingDoneUI();
                     }
                 };
-                //TODO
-                // Set player position on mesh
-
             }
 
         } catch (Exception e)
@@ -296,6 +278,21 @@ public class GPS : MonoBehaviour
     public void ResetGlacier()
     {
         Destroy(glacierGameObject);
+
+        for (int i = pointOfInterestObject.childCount - 1; i >= 0; i--)
+        {
+            Destroy(pointOfInterestObject.GetChild(i).gameObject);
+        }
+    }
+
+    public void ToggleGlacierOutline()
+    {
+        glacierObject.ToggleTerrainOutline();
+    }
+
+    public void TogglePointOfInterest()
+    {
+        pointOfInterestObject.gameObject.SetActive(!pointOfInterestObject.gameObject.activeSelf);
     }
 
     private void LoadingException(Exception e)
@@ -324,9 +321,6 @@ public class GPS : MonoBehaviour
             // Starts the location service.
             Input.location.Start();
 
-            //loadingManager.SetText("Start GPS");
-            //loadingManager.SetHeadingProgress(30);
-
             // Waits until the location service initializes
             int maxWait = 10000;
             while (Input.location.status == LocationServiceStatus.Initializing && maxWait > 0)
@@ -351,14 +345,13 @@ public class GPS : MonoBehaviour
             currentGpsLocation = new GpsData(Input.location.lastData.latitude, Input.location.lastData.longitude, Input.location.lastData.altitude);
 
         }
-
-        //loadingManager.SetText("Positioning done");
-        //loadingManager.SetHeadingProgress(100);
         onComplete?.Invoke();
     }
 
     public IEnumerator AdjustHeading()
     {
+        started = false;
+
         // Enable the compass
         Input.compass.enabled = true;
 
@@ -396,27 +389,21 @@ public class GPS : MonoBehaviour
     /// <summary>
     /// Calculates the Position on a Mesh (with MeshCollider).
     /// </summary>
-    public Vector3 CalculatePositionOnMesh(Transform t, float heightOffset = 0f)
+    public Vector3 CalculatePositionOnMesh(Vector3 position, float heightOffset = 0f)
     {
-        Vector3 pos = new Vector3(t.position.x, t.position.y + 50000f, t.position.z);
-
-        Debug.Log("Ray: " + t.name.ToString() + " " + pos.ToString());
+        Vector3 pos = new Vector3(position.x, position.y + 50000f, position.z);
 
         int layer = terrainLayer;
         RaycastHit ray;
         if (Physics.Raycast(pos, Vector3.down, out ray, 100000, layer))
         {
-            Debug.DrawRay(pos, t.TransformDirection(Vector3.down) * ray.distance, Color.yellow, 100000f);
             Debug.Log("RAY DOWN HIT");
         }
         else
         {
             Physics.Raycast(pos, Vector3.up, out ray, 100000, layer);
-            Debug.DrawRay(pos, t.TransformDirection(Vector3.up) * ray.distance, Color.yellow, 100000f);
             Debug.Log("RAY UP HIT");
         }
-
-        Debug.Log("RayDistance: " + t.name.ToString() + " " + ray.distance);
 
         Vector3 temp = ray.point;
         Debug.Log("Temp: " + temp.ToString());

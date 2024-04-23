@@ -4,15 +4,20 @@ using TMPro;
 
 public class SceneSelector : MonoBehaviour
 {
+    //[SerializeField] SystemLanguage language;
+
     [SerializeField] private GameObject UI_glacierSelection;
     [SerializeField] private GameObject UI_simulationSelection;
     [SerializeField] private GameObject UI_loadingScreen;
+    [SerializeField] private GameObject UI_hamburger;
     public GameObject UI_glaciAR;
     public Slider glaciARSlider;
     public TextMeshProUGUI glaciARSliderText;
 
     private void Start()
     {
+        LanguageTextManager.LoadLocalizedText("german.json");
+
         OnMenuClicked();
     }
 
@@ -22,6 +27,7 @@ public class SceneSelector : MonoBehaviour
         UI_simulationSelection.SetActive(false);
         UI_loadingScreen.SetActive(false);
         UI_glaciAR.SetActive(false);
+        UI_hamburger.SetActive(false);
 
         // Destroy all temp Elements
         GPS.Instance.ResetGlacier();
@@ -29,13 +35,14 @@ public class SceneSelector : MonoBehaviour
 
     public void OnGlacierSelect(int index)
     {
-        GPS.Instance.activeGlacier = GPS.Instance.glaciers[index];
+        GPS.Instance.SetGlacier(index);
 
         UI_simulationSelection.SetActive(true);
 
         UI_glacierSelection.SetActive(false);
         UI_loadingScreen.SetActive(false);
         UI_glaciAR.SetActive(false);
+        UI_hamburger.SetActive(false);
     }
 
     public void OnSimulationSelect(bool simulateGPS)
@@ -49,6 +56,7 @@ public class SceneSelector : MonoBehaviour
     private void LoadGlacierUI()
     {
         UI_loadingScreen.SetActive(true);
+        UI_hamburger.SetActive(true);
 
         UI_glacierSelection.SetActive(false);
         UI_simulationSelection.SetActive(false);

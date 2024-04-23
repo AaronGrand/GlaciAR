@@ -32,4 +32,18 @@ public class GlacierObject : MonoBehaviour
             glacier.GetComponent<Renderer>().material = glacierMaterial;
         }
     }
+
+    public void ToggleTerrainOutline()
+    {
+
+        Outline outlineScript = terrain.GetComponent<Outline>();
+        if (outlineScript)
+        {
+            GPS.Instance.outline = !GPS.Instance.outline;
+            outlineScript.enabled = GPS.Instance.outline;
+        } else
+        {
+            Debug.Log("Couldn't find Outline script on terrain.");
+        }
+    }
 }

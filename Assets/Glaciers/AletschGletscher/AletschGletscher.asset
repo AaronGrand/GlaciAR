@@ -32,3 +32,4 @@ MonoBehaviour:
   mat_terrain: {fileID: 2100000, guid: c20eb786443293041ac62b201d519dd4, type: 2}
   mat_glacierBed: {fileID: 2100000, guid: 8605f58ff1b11404590baf7834fd9aeb, type: 2}
   mat_glacier: {fileID: 2100000, guid: c20eb786443293041ac62b201d519dd4, type: 2}
+  pointOfInterestFileName: aletsch_gletscher.json

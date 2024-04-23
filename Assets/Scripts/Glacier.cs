@@ -21,4 +21,6 @@ public class Glacier : ScriptableObject
     public Material mat_terrain;
     public Material mat_glacierBed;
     public Material mat_glacier;
+
+    public string pointOfInterestFileName;
 }
