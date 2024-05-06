@@ -17,7 +17,7 @@ public class SceneSelector : MonoBehaviour
 
     private void Start()
     {
-        LanguageTextManager.LoadLocalizedText("german.json");
+        StartCoroutine(LanguageTextManager.LoadLocalizedText("german.json"));
 
         UI_startScreen.SetActive(false);
 
@@ -59,8 +59,8 @@ public class SceneSelector : MonoBehaviour
     private void LoadGlacierUI()
     {
         UI_loadingScreen.SetActive(true);
-        UI_hamburger.SetActive(true);
-
+        
+        UI_hamburger.SetActive(false);
         UI_glacierSelection.SetActive(false);
         UI_simulationSelection.SetActive(false);
         UI_glaciAR.SetActive(false);
@@ -69,6 +69,7 @@ public class SceneSelector : MonoBehaviour
     public void LoadingDoneUI()
     {
         UI_glaciAR.SetActive(true);
+        UI_hamburger.SetActive(true);
 
         UI_glacierSelection.SetActive(false);
         UI_simulationSelection.SetActive(false);

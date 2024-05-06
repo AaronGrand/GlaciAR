@@ -110,6 +110,11 @@ public class GPS : MonoBehaviour
 
     #region Class Methods
 
+    public void SetLanguage(string language)
+    {
+        StartCoroutine(LanguageTextManager.LoadLocalizedText(language));
+    }
+
     public void SetGlacier(int index)
     {
         if (index >= glaciers.Length)
@@ -223,7 +228,7 @@ public class GPS : MonoBehaviour
                                 }
 
                                 // Set Points Of Interest
-                                PointOfInterestManager.LoadLocalizedMountains(activeGlacier.pointOfInterestFileName, pointOfInterestObject);
+                                StaticPointOfInterestManager.LoadLocalizedMountains(activeGlacier.pointOfInterestFileName, pointOfInterestObject);
 
                             }
                             else
@@ -349,7 +354,7 @@ public class GPS : MonoBehaviour
                                         }
 
                                         // Set Points Of Interest
-                                        PointOfInterestManager.LoadLocalizedMountains(activeGlacier.pointOfInterestFileName, pointOfInterestObject);
+                                        StaticPointOfInterestManager.LoadLocalizedMountains(activeGlacier.pointOfInterestFileName, pointOfInterestObject);
 
                                     }
                                     else

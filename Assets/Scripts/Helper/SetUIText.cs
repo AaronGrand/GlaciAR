@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using System.Collections;
 
 public class SetUIText : MonoBehaviour
 {
@@ -8,13 +9,17 @@ public class SetUIText : MonoBehaviour
 
     private void Start()
     {
-        if(text == null || name_in_language_json == null)
+        if (text == null || string.IsNullOrEmpty(name_in_language_json))
         {
-            Debug.Log("cannot find " + name_in_language_json);
+            Debug.LogError("Missing references in inspector!");
             return;
-        } else
-        {
-            text.text = LanguageTextManager.GetLocalizedValue(name_in_language_json);
         }
+
+        InitializeText();
+    }
+
+    private void InitializeText()
+    {
+        text.text = LanguageTextManager.GetLocalizedValue(name_in_language_json);
     }
 }
