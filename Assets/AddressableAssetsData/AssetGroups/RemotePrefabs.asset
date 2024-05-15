@@ -37,11 +37,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 57406f4dcea55ea45821641aeb83a502
-    m_Address: Assets/Materials/Terrain.mat
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dc04faae854084a4384b5ef49f686794
     m_Address: Assets/Materials/SeeThrough.mat
     m_ReadOnly: 0

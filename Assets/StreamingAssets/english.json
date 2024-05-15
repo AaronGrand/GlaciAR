@@ -1,14 +1,18 @@
 {
     "items": [
-        {"key": "heading_progress_0", "value": "Start Compass"},
-        {"key": "gps_progress_0", "value": "Start GPS"},
-        {"key": "load_terrain_progress_0", "value": "Load Terrain"},
-        {"key": "textures_progress_0", "value": "Load Textures"},
-        {"key": "on_site", "value": "I am on site."},
-        {"key": "on_simulation", "value": "I am not on site."},
-        {"key": "menu", "value": "menu"},
-        {"key": "mountain_names", "value": "mountainnames"},
-        {"key": "outline", "value": "outline"}
+        {"key": "aletsch_glacier", "value": "Aletsch Glacier"},
+        {"key": "gorner_glacier", "value": "Gorner Glacier"},
+        {"key": "fiescher_glacier", "value": "Fiescher Glacier"},
+        {"key": "start_progress", "value": "Searching Glaciers"},
+        {"key": "heading_progress_0", "value": "Starting Compass"},
+        {"key": "gps_progress_0", "value": "Starting GPS"},
+        {"key": "load_terrain_progress_0", "value": "Loading Terrain"},
+        {"key": "textures_progress_0", "value": "Loading Textures"},
+        {"key": "on_site", "value": "On the Glacier."},
+        {"key": "on_simulation", "value": "Not on the Glacier"},
+        {"key": "menu", "value": "Menu"},
+        {"key": "main_menu", "value": "Main Menu"},
+        {"key": "mountain_names", "value": "Mountain Names"},
+        {"key": "outline", "value": "Terrain Outline"}
     ]
 }
-    

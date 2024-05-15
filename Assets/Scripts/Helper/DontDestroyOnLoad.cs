@@ -1,7 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Ensures that the GameObject this script is attached to persists when loading new scenes.
+/// </summary>
 public class DontDestroyOnLoad : MonoBehaviour
 {
     private void Awake()

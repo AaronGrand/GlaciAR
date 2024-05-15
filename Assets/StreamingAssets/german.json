@@ -1,13 +1,18 @@
 {
     "items": [
+        {"key": "aletsch_glacier", "value": "Aletschgletscher"},
+        {"key": "gorner_glacier", "value": "Gornergletscher"},
+        {"key": "fiescher_glacier", "value": "Fieschergletscher"},
+        {"key": "start_progress", "value": "Suche Gletscher"},
         {"key": "heading_progress_0", "value": "Starte Kompass"},
         {"key": "gps_progress_0", "value": "Starte GPS"},
         {"key": "load_terrain_progress_0", "value": "Lade Terrain"},
         {"key": "textures_progress_0", "value": "Lade Texturen"},
-        {"key": "on_site", "value": "Ich bin vor Ort."},
-        {"key": "on_simulation", "value": "Ich bin nicht vor Ort."},
+        {"key": "on_site", "value": "Am Gletscher."},
+        {"key": "on_simulation", "value": "Nicht am Gletscher"},
         {"key": "menu", "value": "Menü"},
+        {"key": "main_menu", "value": "Hauptmenü"},
         {"key": "mountain_names", "value": "Bergnamen"},
-        {"key": "outline", "value": "Umriss"}
+        {"key": "outline", "value": "Terrain Umriss"}
     ]
 }

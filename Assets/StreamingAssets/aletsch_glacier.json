@@ -1,0 +1,65 @@
+{
+    "mountains": [
+      {
+        "name": "Dreieckhorn",
+        "latitude": 46.477998,
+        "longitude": 8.020166
+      },
+      {
+        "name": "Eggishorn",
+        "latitude": 46.431400,
+        "longitude": 8.094300
+      },
+      {
+        "name": "Bettmerhorn",
+        "latitude": 46.4142,
+        "longitude": 8.0801
+      },
+      {
+        "name": "Geisshorn",
+        "latitude": 46.4410,
+        "longitude": 8.0057
+      },
+      {
+        "name": "Gross Fusshorn",
+        "latitude": 46.4305,
+        "longitude": 7.9978
+      },
+      {
+        "name": "Gross Wannenhorn",
+        "latitude": 46.4939,
+        "longitude": 8.0972
+      },
+      {
+        "name": "Finsteraarhorn",
+        "latitude": 46.5371,
+        "longitude": 8.1264
+      },
+      {
+        "name": "Gross Grünhorn",
+        "latitude": 46.5320,
+        "longitude": 8.0777
+      },
+      {
+        "name": "Klein Fiescherhorn",
+        "latitude": 46.5555,
+        "longitude": 8.0759
+      },
+      {
+        "name": "Eiger",
+        "latitude": 46.5776,
+        "longitude": 8.0054
+      },
+      {
+        "name": "Mönch",
+        "latitude": 46.5585,
+        "longitude": 7.9973
+      },
+      {
+        "name": "Jungfrau",
+        "latitude": 46.5368,
+        "longitude": 7.9626
+      }
+    ]
+  }
+  

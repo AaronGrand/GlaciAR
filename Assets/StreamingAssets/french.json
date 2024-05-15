@@ -1,11 +1,18 @@
 {
     "items": [
-        {"key": "heading_progress_0", "value": "Démarrer le compas"},
-        {"key": "gps_progress_0", "value": "Démarrer le GPS"},
-        {"key": "load_terrain_progress_0", "value": "Charger le terrain"},
-        {"key": "textures_progress_0", "value": "Charger les textures"},
-        {"key": "on_site", "value": "Je suis sur place."},
-        {"key": "on_simulation", "value": "Je ne suis pas sur place."},
-        {"key": "menu", "value": "Menu"}
+        {"key": "aletsch_glacier", "value": "Glacier d'Aletsch"},
+        {"key": "gorner_glacier", "value": "Glacier du Gorner"},
+        {"key": "fiescher_glacier", "value": "Glacier de Fiesch"},
+        {"key": "start_progress", "value": "Recherche de glaciers"},
+        {"key": "heading_progress_0", "value": "Démarrage du compas"},
+        {"key": "gps_progress_0", "value": "Démarrage du GPS"},
+        {"key": "load_terrain_progress_0", "value": "Chargement du terrain"},
+        {"key": "textures_progress_0", "value": "Chargement des textures"},
+        {"key": "on_site", "value": "Sur le glacier."},
+        {"key": "on_simulation", "value": "Pas sur le glacier"},
+        {"key": "menu", "value": "Menu"},
+        {"key": "main_menu", "value": "Menu principal"},
+        {"key": "mountain_names", "value": "Noms des montagnes"},
+        {"key": "outline", "value": "Contour du terrain"}
     ]
 }
