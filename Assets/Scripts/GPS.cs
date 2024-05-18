@@ -40,6 +40,8 @@ public class GPS : MonoBehaviour
     private GameObject glacierGameObject;
     private GlacierObject glacierObject;
 
+    private bool isSimulatePosition = false;
+
     [SerializeField] private string pointOfInterestJSON;
 
     [Header("UI")]
@@ -47,6 +49,7 @@ public class GPS : MonoBehaviour
     public SceneSelector sceneSelector;
     public event Action onLoadingComplete;
     public ExceptionHandler exceptionHandler;
+    public UIHamburger uiHamburger;
 
     [Header("Terrain")]
     [SerializeField] private LayerMask terrainLayer;
@@ -148,8 +151,16 @@ public class GPS : MonoBehaviour
             exceptionHandler.ShowErrorMessage("Camera access is needed for AR features. Please grant permissions to continue.");
             yield return new WaitForSeconds(1);
         }
-#endif
 
+#endif
+        Camera camera = arCamera.GetComponent<Camera>();
+        if(camera != null)
+        {
+            camera.enabled = true;
+        } else
+        {
+            exceptionHandler.ShowErrorMessage("Could not find the camera.\nCheck Permission and restart the app.");
+        }
     }
     public IEnumerator RequestLocationPermission()
     {
@@ -163,7 +174,8 @@ public class GPS : MonoBehaviour
             yield return new WaitForSeconds(1);
         }
 #endif
-        LoadTerrain();
+
+        StartCoroutine(GetGPSPosition(LoadGlacierCoroutine));
     }
 
     /// <summary>
@@ -173,6 +185,8 @@ public class GPS : MonoBehaviour
     public void StartLoadingTerrain(bool simulateGPS)
     {
         loadingManager.SetText(LanguageTextManager.GetLocalizedValue("start_progress"));
+
+        isSimulatePosition = simulateGPS;
 
         if (simulateGPS)
         {
@@ -191,15 +205,12 @@ public class GPS : MonoBehaviour
     private void SimulateTerrainLoading()
     {
         cameraOffset.transform.position = simulatePosition;
-        LoadGlacier();
+        LoadGlacierCoroutine();
     }
 
-    /// <summary>
-    /// Initiates the process to fetch the user's GPS location and loads the terrain data accordingly.
-    /// </summary>
-    private void LoadTerrain()
+    private void LoadGlacierCoroutine()
     {
-        StartCoroutine(GetGPSPosition(LoadGlacier));
+        StartCoroutine(LoadGlacier());
     }
 
     /// <summary>
@@ -212,19 +223,12 @@ public class GPS : MonoBehaviour
         loadingManager.SetText(LanguageTextManager.GetLocalizedValue("gps_progress_0"));
         loadingManager.SetGPSProgress(10);
 
+#if UNITY_EDITOR
         if (editorSimulateLocation)
         {
             currentGpsLocation = editorSimulatedLocation;
-            onComplete();
-            yield break;
         }
-
-        if (!Input.location.isEnabledByUser)
-        {
-            Debug.Log("Location not enabled on device or app does not have permission to access location");
-            Permission.RequestUserPermission(Permission.FineLocation);
-        }
-
+#elif UNITY_ANDROID
         Input.location.Start();
 
         int maxWait = 10000;
@@ -236,11 +240,29 @@ public class GPS : MonoBehaviour
 
         if (maxWait < 1 || Input.location.status == LocationServiceStatus.Failed)
         {
-            Debug.LogError("Unable to determine device location");
-            yield break;
+            exceptionHandler.ShowErrorMessage("Unable to determine location.\nCheck Permission and restart the app.");
+            ResetGlacier();
+            yield return null;
         }
 
         currentGpsLocation = new GpsData(Input.location.lastData.latitude, Input.location.lastData.longitude, Input.location.lastData.altitude);
+
+#endif
+        // Check if glacier is in reach
+        bool foundActiveGlacier = false;
+
+        bool glacierIsWithinLat = currentGpsLocation.lat >= activeGlacier.south && currentGpsLocation.lat <= activeGlacier.north;
+        bool glacierIsWithinLon = currentGpsLocation.lon >= activeGlacier.west && currentGpsLocation.lon <= activeGlacier.east;
+
+        foundActiveGlacier = (glacierIsWithinLat && glacierIsWithinLon);
+
+        // Not in Reach of the Glacier
+        if (!foundActiveGlacier)
+        {
+            ResetGlacier();
+            exceptionHandler.ShowErrorMessage("Not in reach of selected glacier. Please select simulation.");
+            yield break;
+        }
 
         loadingManager.SetGPSProgress(100);
 
@@ -250,12 +272,20 @@ public class GPS : MonoBehaviour
     /// <summary>
     /// Instantiates the glacier object based on the current active glacier data.
     /// </summary>
-    private void LoadGlacier()
+    private IEnumerator LoadGlacier()
     {
         loadingManager.SetText(LanguageTextManager.GetLocalizedValue("load_terrain_progress_0"));
         loadingManager.SetDownloadProgress(10);
 
-        Addressables.InstantiateAsync(activeGlacier.glacier).Completed += handle =>
+        var addressable = Addressables.InstantiateAsync(activeGlacier.glacier);
+
+        while (!addressable.IsDone)
+        {
+            loadingManager.SetDownloadProgress((int)(addressable.GetDownloadStatus().Percent * 100));
+            yield return null;
+        }
+
+        addressable.Completed += handle =>
         {
             if (handle.Status == AsyncOperationStatus.Succeeded)
             {
@@ -295,6 +325,7 @@ public class GPS : MonoBehaviour
             Destroy(child.gameObject);
         }
 
+        isSimulatePosition = false;
         started = false;
 
         loadingManager.ResetProgress();
@@ -317,6 +348,21 @@ public class GPS : MonoBehaviour
         glacierObject = glacierGameObject.GetComponent<GlacierObject>();
         if (glacierObject != null)
         {
+            if (!isSimulatePosition)
+            {
+                glacierObject.SetTerrainMaterial(mat_seeThrough);
+
+                // set player on glacier
+
+                Vector2 glacierUnityLocation = CoordinateConverter.calculateRelativePositionEquirectangular2D(activeGlacier.centerPosition, currentGpsLocation);
+                cameraOffset.transform.position = new Vector3((float)(glacierUnityLocation.x), world.position.y, (float)(glacierUnityLocation.y));
+
+                cameraOffset.transform.position = new Vector3(cameraOffset.transform.position.x, CalculatePositionOnMesh(cameraOffset.transform.position).y + cameraHeightOffset, cameraOffset.transform.position.z);
+            }
+
+            // set initial text on slider
+            sceneSelector.OnChangeGlacier(glacierObject.glacierStates[0].name.Substring(2, 4));
+
             sceneSelector.SetupSlider(glacierObject.glacierStates.Length, (value) =>
             {
                 glacierObject.SetGlacier(Mathf.RoundToInt(value));
@@ -327,10 +373,8 @@ public class GPS : MonoBehaviour
         }
         else
         {
-            exceptionHandler.ShowErrorMessage("Error: No glacier found.");
+            exceptionHandler.ShowErrorMessage("Error: No glacier found.\nDelete cache and restart the app");
             ResetGlacier();
-
-            Debug.LogError("No GlacierObject component found.");
         }
     }
 

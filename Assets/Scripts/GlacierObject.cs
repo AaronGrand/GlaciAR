@@ -52,7 +52,7 @@ public class GlacierObject : MonoBehaviour
     /// Applies a specified material to all glacier GameObjects.
     /// </summary>
     /// <param name="glacierMaterial">The material to apply to the glacier states.</param>
-    public void SetMaterial(Material glacierMaterial)
+    public void SetGlacierMaterial(Material glacierMaterial)
     {
         foreach (GameObject glacier in glacierStates)
         {
@@ -60,6 +60,22 @@ public class GlacierObject : MonoBehaviour
             if (renderer != null)
             {
                 renderer.material = glacierMaterial;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Applies a specified material to the terrain GameObject.
+    /// </summary>
+    /// <param name="terrainMaterial">The material to apply to the terrain.</param>
+    public void SetTerrainMaterial(Material terrainMaterial)
+    {
+        foreach (GameObject glacier in glacierStates)
+        {
+            var renderer = terrain.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.material = terrainMaterial;
             }
         }
     }

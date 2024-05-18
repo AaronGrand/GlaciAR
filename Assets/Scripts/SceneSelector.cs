@@ -56,6 +56,7 @@ public class SceneSelector : MonoBehaviour
     /// </summary>
     public void OnMenuClicked()
     {
+        GPS.Instance.uiHamburger.Reset();
         ResetUI();
         GPS.Instance.ResetGlacier();
     }
