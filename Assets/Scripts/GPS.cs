@@ -107,7 +107,7 @@ public class GPS : MonoBehaviour
             Touch touch = Input.GetTouch(0);
             if (touch.phase == TouchPhase.Moved)
             {
-                float rotationAmount = touch.deltaPosition.x * -0.05f;
+                float rotationAmount = touch.deltaPosition.x * -0.01f;
                 cameraOffset.transform.Rotate(0, rotationAmount, 0);
             }
         }
@@ -224,10 +224,7 @@ public class GPS : MonoBehaviour
         loadingManager.SetGPSProgress(10);
 
 #if UNITY_EDITOR
-        if (editorSimulateLocation)
-        {
-            currentGpsLocation = editorSimulatedLocation;
-        }
+
 #elif UNITY_ANDROID
         Input.location.Start();
 
@@ -248,6 +245,12 @@ public class GPS : MonoBehaviour
         currentGpsLocation = new GpsData(Input.location.lastData.latitude, Input.location.lastData.longitude, Input.location.lastData.altitude);
 
 #endif
+
+        if (editorSimulateLocation)
+        {
+            currentGpsLocation = editorSimulatedLocation;
+        }
+
         // Check if glacier is in reach
         bool foundActiveGlacier = false;
 
@@ -358,6 +361,9 @@ public class GPS : MonoBehaviour
                 cameraOffset.transform.position = new Vector3((float)(glacierUnityLocation.x), world.position.y, (float)(glacierUnityLocation.y));
 
                 cameraOffset.transform.position = new Vector3(cameraOffset.transform.position.x, CalculatePositionOnMesh(cameraOffset.transform.position).y + cameraHeightOffset, cameraOffset.transform.position.z);
+
+                
+                StartCoroutine(AdjustHeading());
             }
 
             // set initial text on slider
@@ -376,6 +382,23 @@ public class GPS : MonoBehaviour
             exceptionHandler.ShowErrorMessage("Error: No glacier found.\nDelete cache and restart the app");
             ResetGlacier();
         }
+    }
+
+    /// <summary>
+    /// Coroutine to adjust the heading of the AR origin based on the device's compass.
+    /// </summary>
+    private IEnumerator AdjustHeading()
+    {
+        // Enable the compass
+        Input.compass.enabled = true;
+
+        // Wait a bit for the compass to start
+        yield return new WaitForSeconds(1f);
+
+        float heading = Input.compass.magneticHeading;
+
+        //rotate Origin
+        xrOrigin.MatchOriginUpCameraForward(Vector3.up, CoordinateConverter.HeadingToForwardVector(heading + 180));
     }
 
     /// <summary>
